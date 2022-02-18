@@ -1,0 +1,65 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - "*"
+  
+  workflow_dispatch:
+
+jobs:
+  
+  build:
+    name: build and upload artifacts
+    runs-on: windows-latest
+    # needs: create_release
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+        
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+        
+      - name: Navigate to Workspace
+        run: cd $GITHUB_WORKSPACE
+      
+      - name: Restore Packages
+        run: nuget restore VigoBAS.FINT.HR.sln
+
+      - name: Get tag
+        id: get_tag
+        run: echo ::set-output name=ID::${GITHUB_REF/refs\/tags\//}
+        shell: bash
+
+      - name: Build Solution
+        run: |
+          msbuild.exe VigoBAS.FINT.HR.sln -property:platform="Any CPU" -property:Configuration="Release"
+
+      - name: Pack release
+        run: |
+          cd bin/release
+          7z a -tzip vigobas-fint-hr-ma-${{steps.get_tag.outputs.ID}}.zip *.dll -r
+          cp *.zip ../..
+          
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: vigobas-fint-hr-ma
+          path: vigobas-fint-hr-ma-${{steps.get_tag.outputs.ID}}.zip
+
+  publish:
+    needs: build
+    name: publish artifacts to github release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: vigobas-fint-hr-ma
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: vigobas-fint-hr-ma-*.zip
