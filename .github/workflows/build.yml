@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Solution
         run: |
-          msbuild.exe VigoBAS.FINT.Edu.sln /p:platform="Any CPU" /p:Configuration="Release"
+          msbuild.exe VigoBAS.FINT.HR.sln /p:platform="Any CPU" /p:Configuration="Release"
       
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.3.1
