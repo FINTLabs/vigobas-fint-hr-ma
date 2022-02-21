@@ -34,8 +34,7 @@ jobs:
         run: echo ::set-output name=ID::${GITHUB_REF/refs\/tags\//}
         shell: bash
 
-      - name: Set version in assemblyinfo
-        id: set_version
+      - name: Set assembly version       
         run: sed -i -E "s/(AssemblyVersion[(]\").*(\"[)])/\1${{steps.get_tag.outputs.ID}}\2/"  ./AssemblyInfo.cs
         shell: bash
 
