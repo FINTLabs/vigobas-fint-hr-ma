@@ -36,7 +36,7 @@ jobs:
 
       - name: Set version in assemblyinfo
         id: set_version
-        run: sed -i -E "s/(AssemblyVersion[(]\").*(\"[)])/${{steps.get_tag.outputs.ID}}\2/"  ./AssemblyInfo.cs
+        run: sed -i -E "s/(AssemblyVersion[(]\").*(\"[)])/\1${{steps.get_tag.outputs.ID}}\2/"  ./AssemblyInfo.cs
         shell: bash
 
       - name: Build Solution
