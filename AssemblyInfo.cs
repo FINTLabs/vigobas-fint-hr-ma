@@ -24,12 +24,12 @@ using System.Runtime.CompilerServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly: AssemblyTitle("")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("VIGOBAS FINT HR MA")]
+[assembly: AssemblyDescription("Import and export of hr data through FINT")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyCompany("Vigo IKS")]
+[assembly: AssemblyProduct("VIGO-BAS")]
+[assembly: AssemblyCopyright("Copyright 2020 Vigo IKS")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
