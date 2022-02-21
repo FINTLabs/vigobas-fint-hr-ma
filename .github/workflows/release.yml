@@ -34,6 +34,11 @@ jobs:
         run: echo ::set-output name=ID::${GITHUB_REF/refs\/tags\//}
         shell: bash
 
+      - name: Set version in assemblyinfo
+        id: set_version
+        run: sed -i -E "s/(AssemblyVersion[(]\").*(\"[)])/${{steps.get_tag.outputs.ID}}\2/"  ./AssemblyInfo.cs
+        shell: bash
+
       - name: Build Solution
         run: |
           msbuild.exe VigoBAS.FINT.HR.sln -property:platform="Any CPU" -property:Configuration="Release"
