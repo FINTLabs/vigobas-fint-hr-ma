@@ -270,8 +270,8 @@
     <Reference Include="Tavis.UriTemplates, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>Packages\Tavis.UriTemplates.1.1.1\lib\Net45\Tavis.UriTemplates.dll</HintPath>
     </Reference>
-    <Reference Include="Vigo.Bas, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Vigo.Bas.1.0.0\lib\net472\Vigo.Bas.dll</HintPath>
+    <Reference Include="Vigo.Bas, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Vigo.Bas.1.0.1\lib\net472\Vigo.Bas.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
