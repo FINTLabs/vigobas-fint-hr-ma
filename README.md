@@ -9,8 +9,8 @@ Version 1.7.0 is the first public versjon. For older versions see: https://vigob
 ## Version 1.7.99
 This is the 1.8.0-beta
 ### Features
-Added days after employment ends as config
-Updated alle dependencies to latest released version, eg FINT ver 3.12.10
+* Added days after employment ends as config
+* Updated alle dependencies to latest released version, eg FINT ver 3.12.10
 ### Bugfixes
 Handle different resource id attributes in links
 
