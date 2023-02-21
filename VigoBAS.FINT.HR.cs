@@ -71,40 +71,8 @@ namespace VigoBAS.FINT.HR
         // public const string dateFormat = "yyyy-MM-dd";
 
         private Dictionary<string, IEmbeddedResourceObject> _resourceDict = new Dictionary<string, IEmbeddedResourceObject>();
-
-        //public struct Links
-        //{
-        //    public const string person = "person";
-        //    public const string personalressurs = "personalressurs";
-        //    public const string arbeidssted = "arbeidssted";
-        //    public const string ansvar = "ansvar";
-        //    public const string funksjon = "funksjon";
-        //    public const string arbeidsforholdstype = "arbeidsforholdstype";
-        //    public const string stillingskode = "stillingskode";
-        //    public const string timerperuke = "timerperuke";
-        //    public const string self = "self";
-        //}
-
-        //private struct Param
-        //{
-        //    public const string clientId = "Client Id";
-        //    public const string clientSecret = "Client secret";
-        //    public const string username = "Username";
-        //    public const string password = "Password";
-        //    public const string xOrgId = "xOrgId";
-        //    public const string xClient = "xClient";
-        //    public const string scope = "Scope";
-        //    public const string accessTokenUri = "Uri Accesstoken";
-        //    public const string felleskomponentUri = "Uri felleskomponent";
-        //    public const string additionalAdministrasjonPersonalPersonUri = "additionalAdministrasjonPersonalPersonUri";
-        //    public const string additionalAdministrasjonPersonalPersonalRessursUri = "additionalAdministrasjonPersonalPersonalRessursUri";
-        //    public const string additionalAdministrasjonPersonalArbeidsforholdUri = "additionalAdministrasjonPersonalArbeidsforholdUri";
-        //    public const string additionalAdministrasjonOrganisasjonUri = "additionalAdministrasjonOrganisasjonUri";
-        //}
-
+        private Dictionary<string, string> _personalressursIdMappingDict = new Dictionary<string, string>();
         #region Capabilities, Config parameters and Schema
-
-
 
         public MACapabilities Capabilities
         {
@@ -180,7 +148,7 @@ namespace VigoBAS.FINT.HR
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateCheckBoxParameter(Param.usernameToLowerCase,false));
                         //configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.employmentCompareDate, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysBeforeEmploymentStarts, String.Empty, String.Empty));
-                        //configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysAfterEmploymentEnds, String.Empty, String.Empty));
+                        configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysAfterEmploymentEnds, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterResourceTypes, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterEmploymentTypes, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterPositionCodes, String.Empty, String.Empty));
@@ -526,6 +494,8 @@ namespace VigoBAS.FINT.HR
             var kjonnEntriesPath = DefaultValue.felleskodeverkKjonnUri;
             var organisasjonselementEntriesPath = DefaultValue.administrasjonOrganisasjonOrganisasjonselementUri;
 
+            var felleskomponentUri = configParameters[Param.felleskomponentUri].Value;
+
             var componentList = new List<string>() { personalRessursEntriesPath, personalpersonEntriesPath, arbeidsforholdEntriesPath,
                                                     ansvarEntriesPath, stillingskodeEntriesPath, ukeTimeTallEntriesPath, arbeidsforholdTypeEntriesPath,
                                                     funksjonEntriesPath, sprakEntriesPath, landEntriesPath, kjonnEntriesPath, organisasjonselementEntriesPath };
@@ -548,7 +518,11 @@ namespace VigoBAS.FINT.HR
 
                 if (resourceType == personalRessursEntriesPath)
                 {
-                    personalressursDict.Add(uriKey, resourceDict[uriKey]);
+                    var personalResource = resourceDict[uriKey];
+                    var ansattnummerUri = GetIdentifikatorUri(personalResource, felleskomponentUri, FintAttribute.ansattnummer);
+
+                    personalressursDict.Add(ansattnummerUri, personalResource);
+                    UpdateIdentifierMappingDict(ansattnummerUri, personalResource, ref _personalressursIdMappingDict);
                 }
                 else if (resourceType == arbeidsforholdEntriesPath)
                 {
@@ -683,9 +657,8 @@ namespace VigoBAS.FINT.HR
             string startValue = configParameters[Param.daysBeforeEmploymentStarts].Value;
             int dayBeforeEmploymentStarts = (string.IsNullOrEmpty(startValue)) ? 0 : Int32.Parse(startValue);
 
-            //string endValue = configParameters[Param.daysAfterEmploymentEnds].Value;
-            //int daysAfterEmploymentEnds = (string.IsNullOrEmpty(endValue)) ? 0 : Int32.Parse(endValue);
-            int daysAfterEmploymentEnds = 0;
+            string endValue = configParameters[Param.daysAfterEmploymentEnds].Value;
+            int daysAfterEmploymentEnds = (string.IsNullOrEmpty(endValue)) ? 0 : Int32.Parse(endValue);
 
             //string employmentCompareDateString = configParameters[Param.employmentCompareDate].Value;
 
@@ -794,110 +767,119 @@ namespace VigoBAS.FINT.HR
 
                 if (arbeidsforholdLinks.TryGetValue(ResourceLink.personalressurs, out IEnumerable<ILinkObject> personalResourceLink))
                 {
-                    var personalressursUri = LinkToString(personalResourceLink);
+                    var personalressursLinkUri = LinkToString(personalResourceLink);
 
-                    var state = arbeidsforhold.State;
-                    if (state.TryGetValue(FintAttribute.gyldighetsperiode, out IStateValue employmentPeriod))
+                    if (_personalressursIdMappingDict.TryGetValue(personalressursLinkUri, out string personalressursUri))
                     {
-                        EmploymentPeriodType employmentPeriodType = CheckValidPeriod(personalressursUri, arbeidforholdSystemUri, employmentPeriod, dayBeforeEmploymentStarts, daysAfterEmploymentEnds, employmentCompareDate);
-
-                        if (employmentPeriodType != EmploymentPeriodType.InvalidPeriod)
+                        var state = arbeidsforhold.State;
+                        if (state.TryGetValue(FintAttribute.gyldighetsperiode, out IStateValue employmentPeriod))
                         {
-                            if (personalressursDict.TryGetValue(personalressursUri, out IEmbeddedResourceObject personalResourceData))
+                            EmploymentPeriodType employmentPeriodType = CheckValidPeriod(personalressursUri, arbeidforholdSystemUri, employmentPeriod, dayBeforeEmploymentStarts, daysAfterEmploymentEnds, employmentCompareDate);
+
+                            if (employmentPeriodType != EmploymentPeriodType.InvalidPeriod)
                             {
-                                var personalResourceLinks = personalResourceData.Links;
-                                if (personalResourceLinks.TryGetValue(ResourceLink.resourceCategory, out IEnumerable<ILinkObject> resourceCategoryLink))
+                                if (personalressursDict.TryGetValue(personalressursUri, out IEmbeddedResourceObject personalResourceData))
                                 {
-                                    string resourceCategoryId = GetIdValueFromLink(resourceCategoryLink);
-
-                                    if (!excludedResourceTypes.Contains(resourceCategoryId))
+                                    var personalResourceLinks = personalResourceData.Links;
+                                    if (personalResourceLinks.TryGetValue(ResourceLink.resourceCategory, out IEnumerable<ILinkObject> resourceCategoryLink))
                                     {
-                                        if (!personalAndResourceCategory.TryGetValue(personalressursUri, out string dummyValue))
+                                        string resourceCategoryId = GetIdValueFromLink(resourceCategoryLink);
+
+                                        if (!excludedResourceTypes.Contains(resourceCategoryId))
                                         {
-                                            personalAndResourceCategory.Add(personalressursUri, resourceCategoryId);
-                                        }
-                                        //if (!politicianAndResourceCategory.TryGetValue(personalressursUri, out string dummyValue1))
-                                        //{
-                                        //    politicianAndResourceCategory.Add(personalressursUri, resourceCategoryId);
-                                        //}
-                                        //if (!otherAndResourceCategory.TryGetValue(personalressursUri, out string dummyValue2))
-                                        //{
-                                        //    otherAndResourceCategory.Add(personalressursUri, resourceCategoryId);
-                                        //}
-
-                                        if (arbeidsforholdLinks.TryGetValue(ResourceLink.arbeidsforholdstype, out IEnumerable<ILinkObject> employmentTypeLink))
-                                        {
-                                            var employmentTypeId = GetIdValueFromLink(employmentTypeLink);
-
-                                            var filterType = string.Empty;
-                                            var filterEmploymentTypes = new List<string>();
-
-                                            if (filterEmpTypesPerResourceTypeDict.TryGetValue(resourceCategoryId, out (string Filtertype, List<string> EmploymentTypes) filterEmploymentTypesForResourceType))
+                                            if (!personalAndResourceCategory.TryGetValue(personalressursUri, out string dummyValue))
                                             {
-                                                filterType = filterEmploymentTypesForResourceType.Filtertype;
-                                                filterEmploymentTypes = filterEmploymentTypesForResourceType.EmploymentTypes;
-
-                                                Logger.Log.Info($"{personalressursUri}: Employment type filter hit for resource type {resourceCategoryId}. Filtertype is {filterType}");
+                                                personalAndResourceCategory.Add(personalressursUri, resourceCategoryId);
                                             }
-                                            else
+                                            //if (!politicianAndResourceCategory.TryGetValue(personalressursUri, out string dummyValue1))
+                                            //{
+                                            //    politicianAndResourceCategory.Add(personalressursUri, resourceCategoryId);
+                                            //}
+                                            //if (!otherAndResourceCategory.TryGetValue(personalressursUri, out string dummyValue2))
+                                            //{
+                                            //    otherAndResourceCategory.Add(personalressursUri, resourceCategoryId);
+                                            //}
+
+                                            if (arbeidsforholdLinks.TryGetValue(ResourceLink.arbeidsforholdstype, out IEnumerable<ILinkObject> employmentTypeLink))
                                             {
-                                                Logger.Log.Info($"{personalressursUri}: Global Employment type filter used for resource type {resourceCategoryId}");
+                                                var employmentTypeId = GetIdValueFromLink(employmentTypeLink);
 
-                                                filterType = Filtertype.Exclude;
-                                                filterEmploymentTypes = globalExcludedEmploymentTypes;
-                                            }
+                                                var filterType = string.Empty;
+                                                var filterEmploymentTypes = new List<string>();
 
-                                            if ((filterType == Filtertype.Exclude &&  !filterEmploymentTypes.Contains(employmentTypeId)) || (filterType == Filtertype.Include && filterEmploymentTypes.Contains(employmentTypeId)))
-                                            {
-                                                Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has valid employment type {employmentTypeId}");
-
-                                                if (arbeidsforholdLinks.TryGetValue(ResourceLink.stillingskode, out IEnumerable<ILinkObject> positionCodeLink))
+                                                if (filterEmpTypesPerResourceTypeDict.TryGetValue(resourceCategoryId, out (string Filtertype, List<string> EmploymentTypes) filterEmploymentTypesForResourceType))
                                                 {
-                                                    var positionCodeId = GetIdValueFromLink(positionCodeLink);
-                                                    if (!excludedPositionCodes.Contains(positionCodeId))
+                                                    filterType = filterEmploymentTypesForResourceType.Filtertype;
+                                                    filterEmploymentTypes = filterEmploymentTypesForResourceType.EmploymentTypes;
+
+                                                    Logger.Log.Info($"{personalressursUri}: Employment type filter hit for resource type {resourceCategoryId}. Filtertype is {filterType}");
+                                                }
+                                                else
+                                                {
+                                                    Logger.Log.Info($"{personalressursUri}: Global Employment type filter used for resource type {resourceCategoryId}");
+
+                                                    filterType = Filtertype.Exclude;
+                                                    filterEmploymentTypes = globalExcludedEmploymentTypes;
+                                                }
+
+                                                if ((filterType == Filtertype.Exclude && !filterEmploymentTypes.Contains(employmentTypeId)) || (filterType == Filtertype.Include && filterEmploymentTypes.Contains(employmentTypeId)))
+                                                {
+                                                    Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has valid employment type {employmentTypeId}");
+
+                                                    if (arbeidsforholdLinks.TryGetValue(ResourceLink.stillingskode, out IEnumerable<ILinkObject> positionCodeLink))
                                                     {
-                                                        Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has valid position code {positionCodeId}");
-                                                        noOfEmployments++;
-
-                                                        (string, EmploymentPeriodType) employmentAndPeriodType = (arbeidforholdSystemUri, employmentPeriodType);
-
-                                                        if (!employeesActiveEmployments.TryGetValue(personalressursUri, out List<(string, EmploymentPeriodType)> val))
+                                                        var positionCodeId = GetIdValueFromLink(positionCodeLink);
+                                                        if (!excludedPositionCodes.Contains(positionCodeId))
                                                         {
-                                                            employeesActiveEmployments.Add(personalressursUri, new List<(string, EmploymentPeriodType)> { employmentAndPeriodType });
+                                                            Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has valid position code {positionCodeId}");
+                                                            noOfEmployments++;
+
+                                                            (string, EmploymentPeriodType) employmentAndPeriodType = (arbeidforholdSystemUri, employmentPeriodType);
+
+                                                            if (!employeesActiveEmployments.TryGetValue(personalressursUri, out List<(string, EmploymentPeriodType)> val))
+                                                            {
+                                                                employeesActiveEmployments.Add(personalressursUri, new List<(string, EmploymentPeriodType)> { employmentAndPeriodType });
+                                                            }
+                                                            else
+                                                            {
+                                                                employeesActiveEmployments[personalressursUri].Add(employmentAndPeriodType);
+                                                            }
+                                                            if (!personalAndEmploymentTypes.TryGetValue(personalressursUri, out HashSet<string> employmentTypes))
+                                                            {
+                                                                personalAndEmploymentTypes.Add(personalressursUri, new HashSet<string> { employmentTypeId });
+                                                            }
+                                                            else
+                                                            {
+                                                                personalAndEmploymentTypes[personalressursUri].Add(employmentTypeId);
+                                                            }
+
                                                         }
                                                         else
                                                         {
-                                                            employeesActiveEmployments[personalressursUri].Add(employmentAndPeriodType);
+                                                            Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has excluded position code {positionCodeId} and is not added to CS");
                                                         }
-                                                        if (!personalAndEmploymentTypes.TryGetValue(personalressursUri, out HashSet<string> employmentTypes))
-                                                        {
-                                                            personalAndEmploymentTypes.Add(personalressursUri, new HashSet<string> { employmentTypeId });
-                                                        }
-                                                        else
-                                                        {
-                                                            personalAndEmploymentTypes[personalressursUri].Add(employmentTypeId);
-                                                        }
-
-                                                    }
-                                                    else
-                                                    {
-                                                        Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has excluded position code {positionCodeId} and is not added to CS");
                                                     }
                                                 }
-                                            }
-                                            else
-                                            {
-                                                Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has excluded employment type {employmentTypeId} and is not added to CS");
+                                                else
+                                                {
+                                                    Logger.Log.Info($"{personalressursUri}: {arbeidforholdSystemUri} has excluded employment type {employmentTypeId} and is not added to CS");
+                                                }
                                             }
                                         }
-                                    }
-                                    else
-                                    {
-                                        Logger.Log.Info($"{personalressursUri}: Excluded personal resource category {resourceCategoryId}");
+                                        else
+                                        {
+                                            Logger.Log.Info($"{personalressursUri}: Excluded personal resource category {resourceCategoryId}");
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        string message = $"{personalressursLinkUri} is referenced by {arbeidforholdSystemUri}";
+                        message += $"but the resource is missing on the {DefaultValue.administrasjonPersonalPersonalRessursUri} endpoint";
+                        Logger.Log.Error(message);
                     }
                 }
             }
@@ -987,19 +969,31 @@ namespace VigoBAS.FINT.HR
 
                     if (orgElementLinks.TryGetValue(ResourceLink.leder, out IEnumerable<ILinkObject> lederLink))
                     {
-                        lederUri = LinkToString(lederLink);
+                        var lederLinkUri = LinkToString(lederLink);
 
-                        if (!leaderOfUnitDict.TryGetValue(lederUri, out List<string> orgelementer))
+                        if (_personalressursIdMappingDict.TryGetValue(lederLinkUri, out string mappedLederUri))
                         {
-                            var orgelementList = new List<string>();
-                            orgelementList.Add(orgElementItemUri);
+                            lederUri = mappedLederUri;
 
-                            leaderOfUnitDict.Add(lederUri, orgelementList);
+                            if (!leaderOfUnitDict.TryGetValue(lederUri, out List<string> orgelementer))
+                            {
+                                var orgelementList = new List<string>();
+                                orgelementList.Add(orgElementItemUri);
+
+                                leaderOfUnitDict.Add(lederUri, orgelementList);
+                            }
+                            else
+                            {
+                                orgelementer.Add(orgElementItemUri);
+                                leaderOfUnitDict[lederUri] = orgelementer;
+                            }
                         }
                         else
                         {
-                            orgelementer.Add(orgElementItemUri);
-                            leaderOfUnitDict[lederUri] = orgelementer;
+                            string message = $"{lederLinkUri} is referenced as leder by {orgElementItemUri}";
+                            message += $"but the resource is missing on the {DefaultValue.administrasjonPersonalPersonalRessursUri} endpoint";
+                            Logger.Log.Error(message);
+
                         }
                     }
                     if (orgElementLinks.TryGetValue(ResourceLink.overordnet, out IEnumerable<ILinkObject> overordnetLink))
@@ -3561,7 +3555,25 @@ namespace VigoBAS.FINT.HR
             }
             return parameterHashset;
         }
-
+        private void UpdateIdentifierMappingDict(string idUri, IEmbeddedResourceObject resourceObject, ref Dictionary<string, string> idMappingDict)
+        {
+            if (resourceObject.Links.TryGetValue(ResourceLink.self, out IEnumerable<ILinkObject> selfLinks))
+            {
+                foreach (var link in selfLinks)
+                {
+                    var selfUri = LinkToString(link);
+                    Logger.Log.DebugFormat("UpdateResourceIdMappingDict: Adding key {0} and value {1} to dictionary", selfUri, idUri);
+                    try
+                    {
+                        idMappingDict.Add(selfUri, idUri);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log.ErrorFormat("UpdateResourceIdMappingDict: Inconsistent self links. Adding key {0} and value {1} to dictionary failed. Error message {2}", selfUri, idUri, e.Message);
+                    }
+                }
+            }
+        }
         private string GetIdentifikatorUri(IEmbeddedResourceObject resource, string felleskomponentUri, string identifikatorName)
         {
             var identifikatorValue = GetIdentifikatorValue(resource, identifikatorName);
