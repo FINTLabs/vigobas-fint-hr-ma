@@ -148,7 +148,7 @@ namespace VigoBAS.FINT.HR
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateCheckBoxParameter(Param.usernameToLowerCase,false));
                         //configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.employmentCompareDate, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysBeforeEmploymentStarts, String.Empty, String.Empty));
-                        //configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysAfterEmploymentEnds, String.Empty, String.Empty));
+                        configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysAfterEmploymentEnds, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterResourceTypes, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterEmploymentTypes, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterPositionCodes, String.Empty, String.Empty));
@@ -657,9 +657,8 @@ namespace VigoBAS.FINT.HR
             string startValue = configParameters[Param.daysBeforeEmploymentStarts].Value;
             int dayBeforeEmploymentStarts = (string.IsNullOrEmpty(startValue)) ? 0 : Int32.Parse(startValue);
 
-            //string endValue = configParameters[Param.daysAfterEmploymentEnds].Value;
-            //int daysAfterEmploymentEnds = (string.IsNullOrEmpty(endValue)) ? 0 : Int32.Parse(endValue);
-            int daysAfterEmploymentEnds = 0;
+            string endValue = configParameters[Param.daysAfterEmploymentEnds].Value;
+            int daysAfterEmploymentEnds = (string.IsNullOrEmpty(endValue)) ? 0 : Int32.Parse(endValue);
 
             //string employmentCompareDateString = configParameters[Param.employmentCompareDate].Value;
 
