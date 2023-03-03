@@ -71,7 +71,7 @@ namespace VigoBAS.FINT.HR
 
             csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdSystemId, ArbeidforholdSystemId));
 
-            if (!string.IsNullOrEmpty(ArbeidsforholdAttributes.ArbeidsforholdStillingskodeKode))
+            if (!string.IsNullOrEmpty(StillingkodeKode))
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdStillingskodeKode, StillingkodeKode));
             }
