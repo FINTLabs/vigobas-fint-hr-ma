@@ -174,7 +174,7 @@ namespace VigoBAS.FINT.HR
                 PersonHovedstillingArbeidsforholdtype = hovedstillingArbeidsforholdtype,
                 PersonHovedstillingStillingskode = hovedstillingStillingskode,
                 PersonHovedstillingStillingskodeNavn = hovedstillingStillingskodeNavn,
-                PersonHovedstillingStillingfunksjonNavn = hovedstillingStillingskodeNavn,
+                PersonHovedstillingStillingfunksjonNavn = hovedstillingStillingfunksjonNavn,
                 PersonHovedstillingTittel = hovedstillingTittel,
                 PersonHovedstillingArbeidsstedUri = hovedstillingOrgEnhetUri,
                 PersonalPrimaryBusinessUnitRef = hovedstillingBusinessUnitUri,
