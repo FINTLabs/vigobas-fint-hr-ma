@@ -81,6 +81,7 @@ namespace VigoBAS.FINT.HR
         public string PersonHovedstillingArbeidsforholdtype  { get; set; }
         public string PersonHovedstillingStillingskode  { get; set; }
         public string PersonHovedstillingStillingskodeNavn { get; set; }
+        public string PersonHovedstillingStillingskodeNavn { get; set; }
         public string PersonHovedstillingLeder { get; set; }
         public List<string> PersonEmployments { get; set; }
         public int PersonalAntallAktiveArbeidsforhold { get; set; }

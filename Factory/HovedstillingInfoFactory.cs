@@ -40,6 +40,7 @@ namespace VigoBAS.FINT.HR
             var hovedstillingstittel = arbeidsforhold?.Stillingstittel;            
             var stillingskodeKode = arbeidsforhold.StillingkodeKode;
             var stillingskodeNavn = arbeidsforhold.StillingkodeNavn;
+            var funksjonNavn = arbeidsforhold.FunksjonNavn;
 
             var arbeidsstedId = arbeidsforhold.ArbeidsstedOrgID;
             var arbeidsstedKode = arbeidsforhold.ArbeidsstedOrgKode;
@@ -71,6 +72,8 @@ namespace VigoBAS.FINT.HR
                 HovedstillingsTittel = hovedstillingstittel,
                 HovedstillingOrgUri = arbeidsstedUri,
                 HovedstillingBusinessUnitUri = businessUnitUri,
+                HovedstillingsFunksjonNavn = funksjonNavn,
+
 
                 HovedstillingOrgID = arbeidsstedId,
                 HovedstillingOrgKode = arbeidsstedKode,

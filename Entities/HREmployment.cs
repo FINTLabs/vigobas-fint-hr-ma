@@ -49,6 +49,7 @@ namespace VigoBAS.FINT.HR
         public string StillingkodeSystemIdUri { get; set; }
         public string StillingkodeNavn { get; set; }
         public string StillingkodeKode { get; set; }
+        public string ArbeidsforholdFunksjonNavn { get; set; }
         public bool? StillingkodePassiv { get; set; }
         public string StillingkodeSystemId { get; set; }
 
@@ -127,6 +128,11 @@ namespace VigoBAS.FINT.HR
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdArbeidsstedOrgKode, ArbeidsstedOrgKode));
             }
+            if (!string.IsNullOrEmpty(ArbeidsforholdFunksjonNavn))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonNavn, FunksjonNavn));
+            }
+            FunksjonNavn
             return csentry;
         }
     }

@@ -37,6 +37,7 @@ namespace VigoBAS.FINT.HR
             bool hovedstilling = false;
             string stillingsnummer = string.Empty;
             string stillingstittel = string.Empty;
+            string funksjon = string.Empty();
             var systemId = new Identifikator();
 
             if (values.TryGetValue(FintAttribute.ansettelsesprosent, out IStateValue ansdictVal))
@@ -63,6 +64,10 @@ namespace VigoBAS.FINT.HR
             {
                 stillingstittel = stiltitdictVal.Value;
             }
+            if (values.TryGetValue(FintAttribute.funksjon, out IStateValue funksjdictVal))
+            {
+                funksjon = funksjdictVal.Value;
+            }
             if (values.TryGetValue(FintAttribute.systemId, out IStateValue sysiddictVal))
             {
                 systemId = JsonConvert.DeserializeObject<Identifikator>(sysiddictVal.Value);
@@ -76,6 +81,7 @@ namespace VigoBAS.FINT.HR
                 Hovedstilling = hovedstilling,
                 Stillingsnummer = stillingsnummer,
                 Stillingstittel = stillingstittel,
+                Funksjon = funksjon,
                 SystemId = systemId
             };
         }
