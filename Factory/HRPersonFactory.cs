@@ -103,7 +103,7 @@ namespace VigoBAS.FINT.HR
             var hovedstillingArbeidsforholdtype = hovedStillingInfo?.HovedstillingArbeidsforholdtype;
             var hovedstillingStillingskode = hovedStillingInfo?.HovedstillingStillingskode;
             var hovedstillingStillingskodeNavn = hovedStillingInfo?.HovedstillingStillingskodeNavn;
-            var hovedstillingStillingfunksjonNavn = hovedStillingInfo?.HovedstillingsFunksjonNavn;
+            var hovedstillingStillingfunksjonNavn = hovedStillingInfo?.HovedstillingFunksjonNavn;
 
             var leadedOrgUnits = new List<string>();
 
