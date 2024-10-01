@@ -76,6 +76,11 @@ namespace VigoBAS.FINT.HR
         public string PersonHovedstillingTittel  { get; set; }
         public string PersonHovedstillingArbeidsstedUri { get; set; }
         public string PersonHovedstillingArbeidsstedNavn{ get; set; }
+        public string PersonHovedstillingFunksjonKode { get; set; }
+        public string PersonHovedstillingFunksjonNavn { get; set; }
+        public bool? PersonHovedstillingFunksjonPassiv { get; set; }
+        public string PersonHovedstillingFunksjonSystemId { get; set; }
+
         public string PersonHovedstillingArbeidsstedOrganisasjonsId { get; set; }
         public string PersonHovedstillingArbeidsstedOrganisasjonsKode { get; set; }
         public string PersonHovedstillingArbeidsforholdtype  { get; set; }

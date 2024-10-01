@@ -59,6 +59,12 @@ namespace VigoBAS.FINT.HR
         public string ArbeidsstedOrgID { get; set; }
         public string ArbeidsstedBusinessUnitUri{ get; set; }
 
+        public string ArbeidsforholdFunksjonKode { get; set; }
+        public string ArbeidsforholdFunksjonNavn { get; set; }
+        public bool? ArbeidsforholdFunksjonPassiv { get; set; }
+        public string ArbeidsforholdFunksjonSystemId { get; set; }
+
+
         //public string PersonalLeder { get; set; }
 
         internal Microsoft.MetadirectoryServices.CSEntryChange GetCSEntryChange()
@@ -127,6 +133,23 @@ namespace VigoBAS.FINT.HR
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdArbeidsstedOrgKode, ArbeidsstedOrgKode));
             }
+            if (!string.IsNullOrEmpty(ArbeidsforholdFunksjonKode))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonKode, ArbeidsforholdFunksjonKode));
+            }
+            if (!string.IsNullOrEmpty(ArbeidsforholdFunksjonNavn))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonNavn, ArbeidsforholdFunksjonNavn));
+            }
+            if (ArbeidsforholdFunksjonPassiv.HasValue)
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonPassiv, ArbeidsforholdFunksjonPassiv));
+            }
+            if (!string.IsNullOrEmpty(ArbeidsforholdFunksjonSystemId.ToString()))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonSystemId, ArbeidsforholdFunksjonSystemId));
+            }
+
             return csentry;
         }
     }

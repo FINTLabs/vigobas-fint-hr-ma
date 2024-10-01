@@ -420,6 +420,11 @@ namespace VigoBAS.FINT.HR
             public const string ArbeidsforholdArbeidsstedOrgKode = "ArbeidsforholdArbeidsstedOrgKode";
             public const string ArbeidsforholdArbeidsstedOrgId = "ArbeidsforholdArbeidsstedOrgId";
             public const string ArbeidsforholdArbeidsstedRef = "ArbeidsforholdArbeidsstedRef";
+            public const string ArbeidsforholdFunksjonKode = "ArbeidsforholdFunksjonKode";
+            public const string ArbeidsforholdFunksjonNavn = "ArbeidsforholdFunksjonNavn";
+            public const string ArbeidsforholdFunksjonPassiv = "ArbeidsforholdFunksjonPassiv";
+            public const string ArbeidsforholdFunksjonSystemId = "ArbeidsforholdFunksjonSystemId";
+
         }
 
         public struct HalObject

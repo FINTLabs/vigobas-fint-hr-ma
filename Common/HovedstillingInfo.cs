@@ -36,5 +36,11 @@ namespace VigoBAS.FINT.HR
         public string HovedstillingArbeidsforholdtype { get; set; }
         public string HovedstillingStillingskode { get; set; }
         public string HovedstillingStillingskodeNavn { get; set; }
+        public string HovedstillingFunksjonKode { get; set; }
+        public string HovedstillingFunksjonNavn { get; set; }
+        public bool? HovedstillingFunksjonPassiv { get; set; }
+        public string HovedstillingFunksjonSystemId { get; set; }
+
+
     }
 }

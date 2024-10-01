@@ -50,6 +50,11 @@ namespace VigoBAS.FINT.HR
             var arbeidforholdUri = arbeidsforhold.ArbeidforholdUri;
             var arbeidforholdType = arbeidsforhold.ArbeidsforholdstypeSystemId;
 
+            var funksjonKode = arbeidsforhold.ArbeidsforholdFunksjonKode;
+            var funksjonNavn = arbeidsforhold.ArbeidsforholdFunksjonNavn;
+            var funksjonPassiv = arbeidsforhold.ArbeidsforholdFunksjonPassiv;
+            var funksjonSystemId = arbeidsforhold.ArbeidsforholdFunksjonSystemId;
+
             //var links = arbeidsforholdResource.Links;
             
             //if (links.TryGetValue(ResourceLink.arbeidssted, out List<Link> arbeidsstedLink))
@@ -78,7 +83,12 @@ namespace VigoBAS.FINT.HR
 
                 HovedstillingArbeidsforholdtype = arbeidforholdType,
                 HovedstillingStillingskode = stillingskodeKode,
-                HovedstillingStillingskodeNavn = stillingskodeNavn,                
+                HovedstillingStillingskodeNavn = stillingskodeNavn,
+                
+                HovedstillingFunksjonKode = funksjonKode,
+                HovedstillingFunksjonNavn = funksjonNavn,
+                HovedstillingFunksjonPassiv = funksjonPassiv,
+                HovedstillingFunksjonSystemId = funksjonSystemId
             };
         }
     }

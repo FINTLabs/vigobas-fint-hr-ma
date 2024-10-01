@@ -1445,6 +1445,7 @@ namespace VigoBAS.FINT.HR
                             var _stillingskode = new Stillingskode();
                             var _arbeidssted = new HRUnit();
                             var _arbeidsforhold = new ArbeidsforholdResource();
+                            var _funksjon = new Funksjon();
 
                             var arbeidsforholdLinks = arbeidsforhold.Links;
 
@@ -1570,6 +1571,15 @@ namespace VigoBAS.FINT.HR
                             }
                             _arbeidsforhold = ArbeidsforholdResourceFactory.Create(arbeidsforhold);
 
+                            if (arbeidsforholdLinks.TryGetValue(ResourceLink.funksjon, out IEnumerable<ILinkObject> arbeidsforholdfunksjonLink))
+                            {
+                                var arbeidsforholdfunksjonUrilink = LinkToString(arbeidsforholdfunksjonLink);
+                                if (funskjonDict.TryGetValue(arbeidsforholdfunksjonUrilink, out IEmbeddedResourceObject arbeidsforholdfunksjonData))
+                                {
+                                    _funksjon = FunksjonFactory.Create(arbeidsforholdfunksjonData.State);
+                                }
+                            }
+
                             var hovedstilling = _arbeidsforhold.Hovedstilling;
 
                             if (hovedstilling)
@@ -1578,7 +1588,7 @@ namespace VigoBAS.FINT.HR
                             }
 
                             var _HREmployments = new HREmployment();
-                            _HREmployments = HREmploymentFactory.Create(employmentUri, _arbeidsforhold, _personalRessurs, _stillingskode, _arbeidsforholdstype, _arbeidssted, hrStandardBusinessUnitUri);
+                            _HREmployments = HREmploymentFactory.Create(employmentUri, _arbeidsforhold, _personalRessurs, _stillingskode, _arbeidsforholdstype, _arbeidssted, hrStandardBusinessUnitUri, _funksjon);
 
                             // Add Employments to Dictionary for import to CS
                             if (!importedObjectsDict.Keys.Contains(employmentUri))

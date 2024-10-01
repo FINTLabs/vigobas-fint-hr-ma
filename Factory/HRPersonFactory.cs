@@ -103,6 +103,11 @@ namespace VigoBAS.FINT.HR
             var hovedstillingArbeidsforholdtype = hovedStillingInfo?.HovedstillingArbeidsforholdtype;
             var hovedstillingStillingskode = hovedStillingInfo?.HovedstillingStillingskode;
             var hovedstillingStillingskodeNavn = hovedStillingInfo?.HovedstillingStillingskodeNavn;
+            var hovedstillingFunksjonKode = hovedStillingInfo?.HovedstillingFunksjonKode;
+            var hovedstillingFunksjonNavn = hovedStillingInfo.HovedstillingFunksjonNavn;
+            var hovedstillingFunksjonPassiv = hovedStillingInfo.HovedstillingFunksjonPassiv;
+            var hovedstillingFunksjonSystemId = hovedStillingInfo.HovedstillingFunksjonSystemId;
+
 
             var leadedOrgUnits = new List<string>();
 
@@ -175,6 +180,11 @@ namespace VigoBAS.FINT.HR
                 PersonHovedstillingStillingskodeNavn = hovedstillingStillingskodeNavn,
                 PersonHovedstillingTittel = hovedstillingTittel,
                 PersonHovedstillingArbeidsstedUri = hovedstillingOrgEnhetUri,
+                PersonHovedstillingFunksjonKode = hovedstillingFunksjonKode,
+                PersonHovedstillingFunksjonNavn = hovedstillingFunksjonNavn,
+                PersonHovedstillingFunksjonPassiv = hovedstillingFunksjonPassiv,
+                PersonHovedstillingFunksjonSystemId = hovedstillingFunksjonSystemId,
+
                 PersonalPrimaryBusinessUnitRef = hovedstillingBusinessUnitUri,
                 PersonHovedstillingArbeidsstedOrganisasjonsId = hovedstillingOrgEnhetId,
                 PersonHovedstillingArbeidsstedOrganisasjonsKode = hovedstillingOrgEnhetKode,

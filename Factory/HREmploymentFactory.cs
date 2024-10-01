@@ -37,7 +37,7 @@ namespace VigoBAS.FINT.HR
             Stillingskode Stillingskode, 
             Arbeidsforholdstype Arbeidsforholdstype, 
             HRUnit Arbeidssted,
-            string standardBusinessUnitUri)
+            string standardBusinessUnitUri, Funksjon Funksjon)
         {
             var arbeidforholdSystemId = Arbeidsforhold.SystemId.Identifikatorverdi;
             var ansettelsesprosent = Arbeidsforhold?.Ansettelsesprosent;
@@ -60,6 +60,11 @@ namespace VigoBAS.FINT.HR
             var personalressursIDUri = string.Empty;
             var arbeidsforholdtypeIDUri = string.Empty;
             var arbeidsforholdTypeSystemID = string.Empty;
+
+            var arbeidsforholdFunksjonKode = Funksjon?.Kode;
+            var arbeidsforholdFunksjonNavn = Funksjon?.Navn;
+            var arbeidsforholdFunksjonPassiv = Funksjon?.Passiv;
+            var arbeidsfoholdSystemId = Funksjon.SystemId.Identifikatorverdi;
 
             var links = Arbeidsforhold.Links;
 
@@ -94,7 +99,11 @@ namespace VigoBAS.FINT.HR
                 ArbeidsstedOrgKode = arbeidsstedOrgKode,
                 ArbeidsstedOrganisasjonsIdUri = arbeidsstedsUri,
                 ArbeidsforholdPersonalressursRef = personalressursIDUri,
-                ArbeidsforholdPersonalressursAnsattnummer = ansattnummer
+                ArbeidsforholdPersonalressursAnsattnummer = ansattnummer,
+                ArbeidsforholdFunksjonKode = arbeidsforholdFunksjonKode,
+                ArbeidsforholdFunksjonNavn = arbeidsforholdFunksjonNavn,
+                ArbeidsforholdFunksjonPassiv = arbeidsforholdFunksjonPassiv,
+                ArbeidsforholdFunksjonSystemId = arbeidsfoholdSystemId
             };
         }
     }
