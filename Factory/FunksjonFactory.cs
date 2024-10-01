@@ -33,8 +33,8 @@ namespace VigoBAS.FINT.HR
         public static Funksjon Create(IReadOnlyDictionary<string, IStateValue> values)
         {
             var gyldighetsperiode = new Periode();
-            string Timekode = "";
-            string Timenavn = "";
+            string kode = "";
+            string navn = "";
             bool passiv = true;
             var systemId = new Identifikator();
 
@@ -45,11 +45,11 @@ namespace VigoBAS.FINT.HR
 
             if (values.TryGetValue("kode", out IStateValue kodedictVal))
             {
-                Timekode = kodedictVal.Value;
+                kode = kodedictVal.Value;
             }
             if (values.TryGetValue("navn", out IStateValue navndictVal))
             {
-                Timenavn = navndictVal.Value;
+                navn = navndictVal.Value;
             }
 
             if (values.TryGetValue("passiv", out IStateValue passivedictVal))
@@ -65,8 +65,8 @@ namespace VigoBAS.FINT.HR
             return new Funksjon
             {
                 Gyldighetsperiode = gyldighetsperiode,
-                Kode = Timekode,
-                Navn = Timenavn,
+                Kode = kode,
+                Navn = navn,
                 Passiv = passiv,
                 SystemId = systemId
             };
