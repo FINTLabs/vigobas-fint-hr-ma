@@ -145,7 +145,7 @@ namespace VigoBAS.FINT.HR
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonPassiv, ArbeidsforholdFunksjonPassiv));
             }
-            if (!string.IsNullOrEmpty(ArbeidsforholdFunksjonSystemId.ToString()))
+            if (ArbeidsforholdFunksjonSystemId != null)
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(ArbeidsforholdAttributes.ArbeidsforholdFunksjonSystemId, ArbeidsforholdFunksjonSystemId));
             }

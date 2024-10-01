@@ -294,7 +294,7 @@ namespace VigoBAS.FINT.HR
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKjonnKode, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonKode, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonNavn, AttributeType.String, AttributeOperation.ImportOnly));
-            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonPassiv, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonPassiv, AttributeType.Boolean, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonSystemId, AttributeType.String, AttributeOperation.ImportOnly));
 
             Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonalArbeidsforholdRefs, AttributeType.Reference, AttributeOperation.ImportOnly));
@@ -415,7 +415,7 @@ namespace VigoBAS.FINT.HR
 
             Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonKode, AttributeType.String, AttributeOperation.ImportOnly));
             Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonNavn, AttributeType.String, AttributeOperation.ImportOnly));
-            Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonPassiv, AttributeType.String, AttributeOperation.ImportOnly));
+            Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonPassiv, AttributeType.Boolean, AttributeOperation.ImportOnly));
             Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonSystemId, AttributeType.String, AttributeOperation.ImportOnly));
 
 

@@ -64,7 +64,7 @@ namespace VigoBAS.FINT.HR
             var arbeidsforholdFunksjonKode = Funksjon?.Kode;
             var arbeidsforholdFunksjonNavn = Funksjon?.Navn;
             var arbeidsforholdFunksjonPassiv = Funksjon?.Passiv;
-            var arbeidsfoholdSystemId = Funksjon.SystemId.Identifikatorverdi;
+            var arbeidsfoholdSystemId = Funksjon?.SystemId?.Identifikatorverdi;
 
             var links = Arbeidsforhold.Links;
 

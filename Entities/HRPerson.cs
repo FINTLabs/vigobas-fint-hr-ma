@@ -209,7 +209,7 @@ namespace VigoBAS.FINT.HR
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonHovedstillingFunksjonPassiv, PersonHovedstillingFunksjonPassiv));
             }
-            if (!string.IsNullOrEmpty(PersonHovedstillingFunksjonSystemId.ToString()))
+            if (PersonHovedstillingFunksjonSystemId != null)
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonHovedstillingFunksjonSystemId, PersonHovedstillingFunksjonSystemId));
             }
