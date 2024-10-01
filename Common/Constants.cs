@@ -337,6 +337,11 @@ namespace VigoBAS.FINT.HR
             public const string PersonalHovedstillingArbeidsstedOrganisasjonsId = "PersonalHovedstillingArbeidsstedOrganisasjonsId";
             public const string PersonalHovedstillingArbeidsstedOrganisasjonsKode = "PersonalHovedstillingArbeidsstedOrganisasjonsKode";
 
+            public const string PersonHovedstillingFunksjonKode = "PersonHovedstillingFunksjonKode";
+            public const string PersonHovedstillingFunksjonNavn = "PersonHovedstillingFunksjonNavn";
+            public const string PersonHovedstillingFunksjonPassiv = "PersonHovedstillingFunksjonPassiv";
+            public const string PersonHovedstillingFunksjonSystemId = "PersonHovedstillingFunksjonSystemId";
+
             public const string PersonalOrgenhetRefs = "PersonalArbeidsstedRefs";
             public const string PersonalBusinessUnitRefs = "PersonalVirksomhetRefs";
             public const string PersonalPrimaryBusinessUnitRef = "PersonalHovedVirksomhetRef";

@@ -197,6 +197,22 @@ namespace VigoBAS.FINT.HR
             {
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonalHovedstillingLederRef, PersonHovedstillingLeder));
             }
+            if (!string.IsNullOrEmpty(PersonHovedstillingFunksjonKode))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonHovedstillingFunksjonKode, PersonHovedstillingFunksjonKode));
+            }
+            if (!string.IsNullOrEmpty(PersonHovedstillingFunksjonNavn))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonHovedstillingFunksjonNavn, PersonHovedstillingFunksjonNavn));
+            }
+            if (PersonHovedstillingFunksjonPassiv.HasValue)
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonHovedstillingFunksjonPassiv, PersonHovedstillingFunksjonPassiv));
+            }
+            if (!string.IsNullOrEmpty(PersonHovedstillingFunksjonSystemId.ToString()))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonHovedstillingFunksjonSystemId, PersonHovedstillingFunksjonSystemId));
+            }
 
             //if (PersonBostedsadresseAdresselinje != null && PersonBostedsadresseAdresselinje.Count > 0)
             //{

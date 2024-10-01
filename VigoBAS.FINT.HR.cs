@@ -292,6 +292,10 @@ namespace VigoBAS.FINT.HR
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonLandsKode, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKjonnNavn, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKjonnKode, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonKode, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonNavn, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonPassiv, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedstillingFunksjonSystemId, AttributeType.String, AttributeOperation.ImportOnly));
 
             Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonalArbeidsforholdRefs, AttributeType.Reference, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonalAntallAktiveArbeidsforhold, AttributeType.Integer, AttributeOperation.ImportOnly));
@@ -309,6 +313,8 @@ namespace VigoBAS.FINT.HR
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonalHovedstillingArbeidsstedOrganisasjonsId, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonalHovedstillingArbeidsstedOrganisasjonsKode, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonalHovedstillingArbeidsstedNavn, AttributeType.String, AttributeOperation.ImportOnly));
+       
+
             //Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonHovedOrgenhet, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonalHovedstillingLederRef, AttributeType.Reference, AttributeOperation.ImportOnly));
 
@@ -406,7 +412,13 @@ namespace VigoBAS.FINT.HR
             Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdArbeidsstedOrgId, AttributeType.String, AttributeOperation.ImportOnly));
             Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdArbeidsstedOrgKode, AttributeType.String, AttributeOperation.ImportOnly));
             Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdArbeidsforholdstypeKode, AttributeType.String, AttributeOperation.ImportOnly));
-           
+
+            Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonKode, AttributeType.String, AttributeOperation.ImportOnly));
+            Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonNavn, AttributeType.String, AttributeOperation.ImportOnly));
+            Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonPassiv, AttributeType.String, AttributeOperation.ImportOnly));
+            Employment.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(ArbeidsforholdAttributes.ArbeidsforholdFunksjonSystemId, AttributeType.String, AttributeOperation.ImportOnly));
+
+
             // Return schema
             Schema schema = Schema.Create();
             schema.Types.Add(Person);
