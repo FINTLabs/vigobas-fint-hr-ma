@@ -214,6 +214,7 @@ namespace VigoBAS.FINT.HR
             public const string daysAfterEmploymentEnds = "Antall dager etter aktivt arbeidsforhold";
             public const string filterResourceTypes = "Filter personalressurskategori";
             public const string filterEmploymentTypes = "Filter Arbeidsforholdtype";
+            public const string filterEmploymentTypesInActiveUsers = "Filter Arbeidsforholdtype midlertidig deaktivert bruker";
             public const string filterPositionCodes = "Filter stillingskode";
 
             public const string waitTime = "Ventetid oppdateringskall";
