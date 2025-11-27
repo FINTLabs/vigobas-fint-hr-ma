@@ -22,6 +22,7 @@ using FINT.Model.Felles;
 using FINT.Model.Felles.Kompleksedatatyper;
 using HalClient.Net.Parser;
 using Newtonsoft.Json;
+using static VigoBAS.FINT.HR.Constants;
 
 namespace VigoBAS.FINT.HR
 {
@@ -36,27 +37,27 @@ namespace VigoBAS.FINT.HR
             DateTime fodselsdato = new DateTime();
             var navn = new Personnavn();
 
-            if (values.TryGetValue("kontaktinformasjon", out IStateValue kondictVal))
+            if (values.TryGetValue(FintAttribute.kontaktinformasjon, out IStateValue kondictVal))
             {
                 kontaktinformasjon = JsonConvert.DeserializeObject<Kontaktinformasjon>(kondictVal.Value);
             }
-            if (values.TryGetValue("postadresse", out IStateValue psadictVal))
+            if (values.TryGetValue(FintAttribute.postadresse, out IStateValue psadictVal))
             {
                 postadresse = JsonConvert.DeserializeObject<Adresse>(psadictVal.Value);
             }
-            if (values.TryGetValue("bostedsadesse", out IStateValue bsadictVal))
+            if (values.TryGetValue(FintAttribute.bostedsadresse, out IStateValue bsadictVal))
             {
                 bostedsadresse = JsonConvert.DeserializeObject<Adresse>(bsadictVal.Value);
             }
-            if (values.TryGetValue("fodselsnummer", out IStateValue fndictVal))
+            if (values.TryGetValue(FintAttribute.fodselsnummer, out IStateValue fndictVal))
             {
                 fodselsnummer = JsonConvert.DeserializeObject<Identifikator>(fndictVal.Value);
             }
-            if (values.TryGetValue("fodselsdato", out IStateValue fddictVal))
+            if (values.TryGetValue(FintAttribute.fodselsdato, out IStateValue fddictVal))
             {
                 fodselsdato = DateTime.Parse(fddictVal.Value);
             }
-            if (values.TryGetValue("navn", out IStateValue ndictVal))
+            if (values.TryGetValue(FintAttribute.navn, out IStateValue ndictVal))
             {
                 navn = JsonConvert.DeserializeObject<Personnavn>(ndictVal.Value);
             }

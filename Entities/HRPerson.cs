@@ -193,32 +193,38 @@ namespace VigoBAS.FINT.HR
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonalHovedstillingLederRef, PersonHovedstillingLeder));
             }
 
-            //if (PersonBostedsadresseAdresselinje != null && PersonBostedsadresseAdresselinje.Count > 0)
-            //{
-            //    IList<object> lines = new List<object>();
-            //    foreach (var line in PersonBostedsadresseAdresselinje)
-            //    {
-            //        lines.Add(line.ToString());
-            //    }
-            //    csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonBostedsadresseAdresselinje, lines));
-            //}
+            if (PersonBostedsadresseAdresselinje != null && PersonBostedsadresseAdresselinje.Count > 0)
+            {
+                IList<object> lines = new List<object>();
+                foreach (var line in PersonBostedsadresseAdresselinje)
+                {
+                    if (!String.IsNullOrEmpty(line))
+                    {
+                        lines.Add(line.ToString());
+                    }
+                }
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonBostedsadresseAdresselinje, lines));
+            }
 
-            //if (!string.IsNullOrEmpty(PersonBostedsadressePostnummer))
-            //{
-            //    csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonBostedsadressePostnummer, PersonBostedsadressePostnummer));
-            //}
+            if (!string.IsNullOrEmpty(PersonBostedsadressePostnummer))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonBostedsadressePostnummer, PersonBostedsadressePostnummer));
+            }
 
-            //if (!string.IsNullOrEmpty(PersonBostedsadressePoststed))
-            //{
-            //    csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonBostedsadressePoststed, PersonBostedsadressePoststed));
-            //}
+            if (!string.IsNullOrEmpty(PersonBostedsadressePoststed))
+            {
+                csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonBostedsadressePoststed, PersonBostedsadressePoststed));
+            }
 
             if (PersonPostadresseAdresselinje != null && PersonPostadresseAdresselinje.Count > 0)
             {
                 IList<object> lines = new List<object>();
                 foreach (var line in PersonPostadresseAdresselinje)
                 {
-                    lines.Add(line.ToString());
+                    if (!String.IsNullOrEmpty(line))
+                    {
+                        lines.Add(line.ToString());
+                    }
                 }
                 csentry.AttributeChanges.Add(AttributeChange.CreateAttributeAdd(PersonAttributes.PersonKontaktinformasjonPostadresseAdresselinje, lines));
             }

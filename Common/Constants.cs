@@ -305,9 +305,9 @@ namespace VigoBAS.FINT.HR
             public const string PersonKontaktinformasjonPostadresseAdresselinje = "PersonKontaktinformasjonPostadresseAdresselinje";
             public const string PersonKontaktinformasjonPostadressePostnummer = "PersonKontaktinformasjonPostadressePostnummer";
             public const string PersonKontaktinformasjonPostadressePoststed = "PersonKontaktinformasjonPostadressePoststed";
-            //public const string PersonBostedsadresseAdresselinje = "PersonBostedsadresseAdresselinje";
-            //public const string PersonBostedsadressePostnummer = "PersonBostedsadressePostnummer";
-            //public const string PersonBostedsadressePoststed = "PersonBostedsadressePoststed";
+            public const string PersonBostedsadresseAdresselinje = "PersonBostedsadresseAdresselinje";
+            public const string PersonBostedsadressePostnummer = "PersonBostedsadressePostnummer";
+            public const string PersonBostedsadressePoststed = "PersonBostedsadressePoststed";
 
             public const string PersonMalformNavn = "PersonMalformNavn";
             public const string PersonMalformKode = "PersonMalformKode";

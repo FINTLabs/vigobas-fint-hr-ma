@@ -281,9 +281,9 @@ namespace VigoBAS.FINT.HR
             Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonKontaktinformasjonPostadresseAdresselinje, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKontaktinformasjonPostadressePostnummer, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKontaktinformasjonPostadressePoststed, AttributeType.String, AttributeOperation.ImportOnly));
-            //Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonBostedsadresseAdresselinje, AttributeType.String, AttributeOperation.ImportOnly));
-            //Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePostnummer, AttributeType.String, AttributeOperation.ImportOnly));
-            //Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePoststed, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonBostedsadresseAdresselinje, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePostnummer, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePoststed, AttributeType.String, AttributeOperation.ImportOnly));
 
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonMalformNavn, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonMalformKode, AttributeType.String, AttributeOperation.ImportOnly));
