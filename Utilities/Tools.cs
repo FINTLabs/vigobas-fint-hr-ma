@@ -123,8 +123,8 @@ namespace VigoBAS.FINT.HR.Utilities
                     var linkString = link.Href.ToString();
                     linksAsString += linkString + Delimiter.listDelimiter;
                 }
-                var message = "Found more than one link in self: " + linksAsString;
-                Logger.Log.InfoFormat(message);
+                //var message = "Found more than one link in self: " + linksAsString;
+                //Logger.Log.InfoFormat(message);
             }
             uriAsString = links.First().Href.ToString();
             normalizedUri = NormalizeUri(uriAsString);

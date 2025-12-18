@@ -55,7 +55,10 @@ namespace VigoBAS.FINT.HR
             var arbeidsstedOrgID = Arbeidssted?.OrganisasjonselementOrganisasjonsid;
             var arbeidsstedOrgKode = Arbeidssted?.OrganisasjonselementOrganisasjonsKode;
             var arbeidsstedsUri = Arbeidssted.UnitUri;
-            
+            var arbeidsstedKortNavn = Arbeidssted?.OrganisasjonselementKortnavn;
+            var arbeidsstedNavn = Arbeidssted?.OrganisasjonselementNavn;
+            var businessUnitUri = string.IsNullOrEmpty(Arbeidssted?.ParentSchoolOrgUnit) ? standardBusinessUnitUri : Arbeidssted.ParentSchoolOrgUnit + Delimiter.suffix + DefaultValue.businessUnitSuffix;
+
             var ansattnummer = personalressursResource.Ansattnummer.Identifikatorverdi;
             var personalressursIDUri = string.Empty;
             var arbeidsforholdtypeIDUri = string.Empty;
@@ -93,6 +96,9 @@ namespace VigoBAS.FINT.HR
                 ArbeidsstedOrgID = arbeidsstedOrgID,
                 ArbeidsstedOrgKode = arbeidsstedOrgKode,
                 ArbeidsstedOrganisasjonsIdUri = arbeidsstedsUri,
+                ArbeidsstedKortnavn = arbeidsstedKortNavn,
+                ArbeidsstedNavn = arbeidsstedNavn,
+                ArbeidsstedBusinessUnitUri = businessUnitUri,
                 ArbeidsforholdPersonalressursRef = personalressursIDUri,
                 ArbeidsforholdPersonalressursAnsattnummer = ansattnummer
             };

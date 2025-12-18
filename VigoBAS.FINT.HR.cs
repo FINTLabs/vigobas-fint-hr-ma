@@ -151,6 +151,7 @@ namespace VigoBAS.FINT.HR
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.daysAfterEmploymentEnds, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterResourceTypes, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterEmploymentTypes, String.Empty, String.Empty));
+                        configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterEmploymentTypesInActiveUsers, String.Empty, String.Empty));
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateStringParameter(Param.filterPositionCodes, String.Empty, String.Empty));
 
                         configParametersDefinitions.Add(ConfigParameterDefinition.CreateDividerParameter());
@@ -280,9 +281,9 @@ namespace VigoBAS.FINT.HR
             Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonKontaktinformasjonPostadresseAdresselinje, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKontaktinformasjonPostadressePostnummer, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonKontaktinformasjonPostadressePoststed, AttributeType.String, AttributeOperation.ImportOnly));
-            //Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonBostedsadresseAdresselinje, AttributeType.String, AttributeOperation.ImportOnly));
-            //Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePostnummer, AttributeType.String, AttributeOperation.ImportOnly));
-            //Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePoststed, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateMultiValuedAttribute(PersonAttributes.PersonBostedsadresseAdresselinje, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePostnummer, AttributeType.String, AttributeOperation.ImportOnly));
+            Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonBostedsadressePoststed, AttributeType.String, AttributeOperation.ImportOnly));
 
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonMalformNavn, AttributeType.String, AttributeOperation.ImportOnly));
             Person.Attributes.Add(SchemaAttribute.CreateSingleValuedAttribute(PersonAttributes.PersonMalformKode, AttributeType.String, AttributeOperation.ImportOnly));
@@ -654,6 +655,477 @@ namespace VigoBAS.FINT.HR
                 }
             }
 
+            bool useOrgUnitCodeAsParameter = configParameters[Param.brukOrganisasjonsKode].Value == "1";
+
+            bool generateAllPersonalGroups = configParameters[Param.genererAllePersonalKategoriGrupper].Value == "1";
+            bool generateOrgUnitGroups = configParameters[Param.genererOrgEnhetGrupper].Value == "1";
+            bool putLeaderAsMemberInGroup = configParameters[Param.leggTilLederSomMedlemIGruppe].Value == "1";
+            bool putLeaderInParentGroup = configParameters[Param.leggTilLedereIOverordnetGruppe].Value == "1";
+            bool findAlwaysManagerForEmployee = configParameters[Param.finnAlltidLederForAnsatt].Value == "1";
+
+            bool generateGroupAllEmployees= configParameters[Param.genererAggrGruppeAlleAnsatte].Value == "1";
+            bool generateGroupAllPoliticians = configParameters[Param.genererAggrGruppeAllePolitikere].Value == "1";
+            bool generateGroupAllOthers = configParameters[Param.genererAggrGruppeAlleAndre].Value == "1";
+            bool generateGroupAllLeaders = configParameters[Param.genererAggrGruppeAlleLedere].Value == "1";
+
+            bool generateGroupsAllTeachersNonTeacherEmployees = configParameters[Param.genererAggrGrupperAlleLarerAdmin].Value == "1";
+            bool generateAggrGroupsForUnits = configParameters[Param.genererAggrGrupperForenheter].Value == "1";
+
+            bool generateSchoolGroups = configParameters[Param.genererLarerAdmAnsGrupper].Value == "1";
+            
+            HashSet<string> employeeResourceCategories = GetConfigParameterList(configParameters, Param.gruppeAlleAnsatteRessurskategorier);
+            HashSet<string> employeeEmploymentTypes = GetConfigParameterList(configParameters, Param.gruppeAlleAnsatteArbeidsforholdtyper);
+
+            HashSet<string> politicianResourceCategories = GetConfigParameterList(configParameters, Param.gruppeAllePolitikerRessurskategorier);
+            HashSet<string> politicianEmploymentTypes = GetConfigParameterList(configParameters, Param.gruppeAllePolitikereArbeidsforholdtyper);
+
+            HashSet<string> otherResourceCategories = GetConfigParameterList(configParameters, Param.gruppeAlleAndreRessurskategorier);
+            HashSet<string> otherEmploymentTypes = GetConfigParameterList(configParameters, Param.gruppeAlleAndreArbeidsforholdtyper);
+
+            HashSet<string> teacherEmploymentTypes = GetConfigParameterList(configParameters, Param.larerArbeidsforholdtyper);
+
+            HashSet<string> allSchoolOrgUnitIds = GetConfigParameterList(configParameters, Param.alleSkoleEnheter);
+
+            Dictionary<string, int> aggrGroupOrgUnitsParams = GetAggrGroupForUnitsParameters(configParameters, Param.enheterAggrGrupper);
+            var aggrGroupOrgUnitIds = aggrGroupOrgUnitsParams.Keys;
+            Dictionary<string, int> aggrGroupOrgUnitUrisAndSearchDepth = new Dictionary<string, int>();
+
+
+            //string GrpSuffix = configParameters[Param.GruppeSuffix].Value;
+
+            Dictionary<string, List<string>> leaderOfUnitDict = new Dictionary<string, List<string>>();
+
+            Dictionary<string, string> orgUnitIdToOrgUnitUri = new Dictionary<string, string>();
+
+            Dictionary<string, string> orgUnitUriToSchoolOrgUnit = new Dictionary<string, string>();
+
+            List<string> allSchoolOrgUnitUris = new List<string>();
+            List<string> allAggrGroupOrgUnitUris = new List<string>();
+
+            List<string> groupsList = new List<string>();
+
+            int noOfOrgElements = 0;
+
+            string topOrgElementItemUri = string.Empty;
+            string hrOrganizationUri = string.Empty;
+            string hrStandardBusinessUnitUri = string.Empty;
+
+            string groupAllPersonalUri = string.Empty;
+            string groupAllEmployeesUri = string.Empty;
+            string groupAllPoliticiansUri = string.Empty;
+            string groupAllOthersUri = string.Empty;
+            string groupAllLeadersUri = string.Empty;
+            string groupAllTeachersUri = string.Empty;
+            string groupAllSchoolAdmUri = string.Empty;
+            string groupAllNonSchoolAdmUri = string.Empty;
+            string groupAllSchoolOthUri = string.Empty;
+            string groupAllNonSchoolOthUri = string.Empty;
+
+            foreach (var orgElementItem in organisasjonselementDict)
+            {
+                var orgElementItemUri = orgElementItem.Key;
+
+                Logger.Log.Debug($"Start reading orgelement {orgElementItemUri} into importedObjectsDict");
+
+                var orgElement = orgElementItem.Value;
+
+                if (!importedObjectsDict.TryGetValue(orgElementItemUri, out ImportListItem unitValue))
+                {
+                    var _hrUnit = HROrgFactory.Create(orgElementItemUri, orgElement.State);
+
+                    if (IsOrgElementActive(_hrUnit))
+                    {
+                        var lederUri = string.Empty;
+                        var overordnetOrgElementUri = string.Empty;
+                        var underordnetUris = new List<string>();
+
+                        var orgElementLinks = orgElement.Links;
+
+                        if (orgElementLinks.TryGetValue(ResourceLink.leder, out IEnumerable<ILinkObject> lederLink))
+                        {
+                            var lederLinkUri = LinkToString(lederLink);
+
+                            if (_personalressursIdMappingDict.TryGetValue(lederLinkUri, out string mappedLederUri))
+                            {
+                                lederUri = mappedLederUri;
+
+                                if (!leaderOfUnitDict.TryGetValue(lederUri, out List<string> orgelementer))
+                                {
+                                    var orgelementList = new List<string>();
+                                    orgelementList.Add(orgElementItemUri);
+
+                                    leaderOfUnitDict.Add(lederUri, orgelementList);
+                                }
+                                else
+                                {
+                                    orgelementer.Add(orgElementItemUri);
+                                    leaderOfUnitDict[lederUri] = orgelementer;
+                                }
+                            }
+                            else
+                            {
+                                string message = $"{lederLinkUri} is referenced as leder by {orgElementItemUri}";
+                                message += $"but the resource is missing on the {DefaultValue.administrasjonPersonalPersonalRessursUri} endpoint";
+                                Logger.Log.Error(message);
+
+                            }
+                        }
+                        if (orgElementLinks.TryGetValue(ResourceLink.overordnet, out IEnumerable<ILinkObject> overordnetLink))
+                        {
+                            overordnetOrgElementUri = LinkToString(overordnetLink);
+
+                            if (overordnetOrgElementUri == orgElementItemUri)
+                            {
+                                topOrgElementItemUri = orgElementItemUri;
+
+                                if (string.IsNullOrEmpty(_hrUnit.OrganisasjonselementNavn))
+                                {
+                                    var organizationName = configParameters[Param.organisasjonsnavn].Value;
+                                    _hrUnit.OrganisasjonselementNavn = organizationName;
+                                }
+                                if (string.IsNullOrEmpty(_hrUnit.OrganisasjonselementKortnavn))
+                                {
+                                    var organizationShortname = configParameters[Param.organisasjonskortnavn].Value;
+                                    _hrUnit.OrganisasjonselementKortnavn = organizationShortname;
+                                }
+                                if (string.IsNullOrEmpty(_hrUnit.OrganisasjonselementOrganisasjonsnummer))
+                                {
+                                    var organizationNumber = configParameters[Param.organisasjonsnummer].Value;
+                                    _hrUnit.OrganisasjonselementOrganisasjonsnummer = organizationNumber;
+                                }
+                                var hrOrganization = HROrgFactory.Create(_hrUnit);
+                                hrOrganizationUri = hrOrganization.HROrganizationUri;
+                                hrOrganization.HROrganizationEmailAddress = configParameters[Param.organisasjonEpostadresse].Value;
+
+                                importedObjectsDict.Add(hrOrganizationUri, new ImportListItem { HrOrganization = hrOrganization });
+
+                                // create default business unit (fallback)  
+
+                                string standardBusinessUnitName = configParameters[Param.standardBusinessUnitName].Value;
+                                string standardBusinessUnitOrgNo = configParameters[Param.standardBusinessUnitOrgNo].Value;
+                                string standardBusinessUnitEmailAddress = configParameters[Param.standardBusinessUnitEmailAddress].Value;
+
+                                if (!string.IsNullOrEmpty(standardBusinessUnitName) && !string.IsNullOrEmpty(standardBusinessUnitOrgNo) && !string.IsNullOrEmpty(standardBusinessUnitEmailAddress))
+                                {
+                                    hrStandardBusinessUnitUri = topOrgElementItemUri + Delimiter.suffix + DefaultValue.businessUnitSuffix;
+
+                                    var standardBusinessUnit = new HRBusinessUnit
+                                    {
+                                        BusinessUnitUri = hrStandardBusinessUnitUri,
+                                        BusinessUnitName = standardBusinessUnitName,
+                                        BusinessUnitOrganizationNumber = standardBusinessUnitOrgNo,
+                                        BusinessUnitEmailAddress = standardBusinessUnitEmailAddress
+                                    };
+                                    importedObjectsDict.Add(hrStandardBusinessUnitUri, new ImportListItem { HrBusinessUnit = standardBusinessUnit });
+                                }
+                            }
+                            var orgCode = _hrUnit.OrganisasjonselementOrganisasjonsKode;
+
+                            if (allSchoolOrgUnitIds.Contains(orgCode))
+                            {
+                                var hrBusinessUnit = HROrgFactory.Create(_hrUnit, DefaultValue.businessUnitSuffix);
+                                var hrBusinessUnitUri = hrBusinessUnit.BusinessUnitUri;
+                                importedObjectsDict.Add(hrBusinessUnitUri, new ImportListItem { HrBusinessUnit = hrBusinessUnit });
+                            }
+                        }
+                        if (orgElementLinks.TryGetValue(ResourceLink.underordnet, out IEnumerable<ILinkObject> underordnetLink))
+                        {
+                            underordnetUris = LinksToStrings(underordnetLink);
+                        }
+                        _hrUnit.OrganisasjonselementLeder = lederUri;
+                        _hrUnit.OrganisasjonselementOverordnet = overordnetOrgElementUri;
+                        _hrUnit.OrganisasjonselementUnderordnet = underordnetUris;
+
+                        importedObjectsDict.Add(orgElementItemUri, new ImportListItem { HrUnit = _hrUnit });
+                        Logger.Log.Debug($"Adding hrUnit object {orgElementItemUri} to importedObjectsDict");
+
+                        var orgUnitId = (useOrgUnitCodeAsParameter) ? _hrUnit.OrganisasjonselementOrganisasjonsKode : _hrUnit.OrganisasjonselementOrganisasjonsid;
+                        orgUnitIdToOrgUnitUri.Add(orgUnitId, orgElementItemUri);
+
+                        noOfOrgElements++;
+
+                        if (generateAllPersonalGroups || generateGroupAllEmployees || generateGroupAllPoliticians || generateGroupAllOthers || generateGroupAllLeaders || generateGroupsAllTeachersNonTeacherEmployees)
+                        {
+                            if (overordnetOrgElementUri == orgElementItemUri)
+                            {
+                                var _hrGroup = new HRGroup();
+                                var orgElementState = orgElement.State;
+
+                                if (generateAllPersonalGroups)
+                                {
+                                    (groupAllPersonalUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrAll, _hrUnit, configParameters);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllPersonalUri, out ImportListItem dummyValue))
+                                    {
+                                        importedObjectsDict.Add(groupAllPersonalUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+
+                                if (generateGroupAllEmployees)
+                                {
+                                    (groupAllEmployeesUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrEmp, _hrUnit, configParameters);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllEmployeesUri, out ImportListItem dummyValue))
+                                    {
+                                        importedObjectsDict.Add(groupAllEmployeesUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+                                if (generateGroupAllPoliticians)
+                                {
+                                    (groupAllPoliticiansUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrPol, _hrUnit, configParameters);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllPoliticiansUri, out ImportListItem dummyValue))
+                                    {
+                                        importedObjectsDict.Add(groupAllPoliticiansUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+                                if (generateGroupAllOthers)
+                                {
+                                    (groupAllOthersUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrOth, _hrUnit, configParameters);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllOthersUri, out ImportListItem dummyValue))
+                                    {
+                                        importedObjectsDict.Add(groupAllOthersUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+                                if (generateGroupAllLeaders)
+                                {
+                                    (groupAllLeadersUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrMan, _hrUnit, configParameters);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllLeadersUri, out ImportListItem dummyValue))
+                                    {
+                                        importedObjectsDict.Add(groupAllLeadersUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+                                if (generateGroupsAllTeachersNonTeacherEmployees)
+                                {
+                                    var isSchoolNonSchoolGroup = true;
+
+                                    var isSchoolGroup = true;
+
+                                    (groupAllTeachersUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.schoolTag, GroupType.aggrFac, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllTeachersUri, out ImportListItem dummyValue))
+                                    {
+                                        importedObjectsDict.Add(groupAllTeachersUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+
+                                    (groupAllSchoolAdmUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.schoolTag, GroupType.aggrAdm, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllSchoolAdmUri, out ImportListItem dummyValue1))
+                                    {
+                                        importedObjectsDict.Add(groupAllSchoolAdmUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+
+                                    (groupAllSchoolOthUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.schoolTag, GroupType.aggrOth, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllSchoolOthUri, out ImportListItem dummyValue3))
+                                    {
+                                        importedObjectsDict.Add(groupAllSchoolOthUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+
+                                    isSchoolGroup = false;
+
+                                    (groupAllNonSchoolAdmUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.nonSchoolTag, GroupType.aggrAdm, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllNonSchoolAdmUri, out ImportListItem dummyValue2))
+                                    {
+                                        importedObjectsDict.Add(groupAllNonSchoolAdmUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+
+                                    (groupAllNonSchoolOthUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.nonSchoolTag, GroupType.aggrOth, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
+
+                                    if (!importedObjectsDict.TryGetValue(groupAllNonSchoolOthUri, out ImportListItem dummyValue4))
+                                    {
+                                        importedObjectsDict.Add(groupAllNonSchoolOthUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+                            }
+                        }
+                        if (allSchoolOrgUnitIds.Contains(orgUnitId))
+                        {
+                            allSchoolOrgUnitUris.Add(orgElementItemUri);
+
+                            if (generateSchoolGroups)
+                            {
+                                var isSchoolGroup = true;
+                                var _hrGroup = new HRGroup();
+                                var groupSchoolEmployeesUri = string.Empty;
+                                var groupTeachersUri = string.Empty;
+                                var groupSchoolAdminsUri = string.Empty;
+                                var groupSchoolOthersUri = string.Empty;
+
+                                if (generateAllPersonalGroups)
+                                {
+                                    var groupSchoolAllPersonalUri = string.Empty;
+
+                                    (groupSchoolAllPersonalUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrAll, _hrUnit, configParameters, isSchoolGroup);
+
+                                    if (!importedObjectsDict.TryGetValue(groupSchoolAllPersonalUri, out ImportListItem dummyValue0))
+                                    {
+                                        importedObjectsDict.Add(groupSchoolAllPersonalUri, new ImportListItem { HrGroup = _hrGroup });
+                                    }
+                                }
+
+                                (groupSchoolEmployeesUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrEmp, _hrUnit, configParameters, isSchoolGroup);
+
+                                if (!importedObjectsDict.TryGetValue(groupSchoolEmployeesUri, out ImportListItem dummyValue))
+                                {
+                                    importedObjectsDict.Add(groupSchoolEmployeesUri, new ImportListItem { HrGroup = _hrGroup });
+                                }
+
+                                (groupTeachersUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrFac, _hrUnit, configParameters, isSchoolGroup);
+
+                                if (!importedObjectsDict.TryGetValue(groupTeachersUri, out ImportListItem dummyValue1))
+                                {
+                                    importedObjectsDict.Add(groupTeachersUri, new ImportListItem { HrGroup = _hrGroup });
+                                }
+
+                                (groupSchoolAdminsUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrAdm, _hrUnit, configParameters, isSchoolGroup);
+
+                                if (!importedObjectsDict.TryGetValue(groupSchoolAdminsUri, out ImportListItem dummyValue2))
+                                {
+                                    importedObjectsDict.Add(groupSchoolAdminsUri, new ImportListItem { HrGroup = _hrGroup });
+                                }
+
+                                (groupSchoolOthersUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrOth, _hrUnit, configParameters, isSchoolGroup);
+
+                                if (!importedObjectsDict.TryGetValue(groupSchoolOthersUri, out ImportListItem dummyValue3))
+                                {
+                                    importedObjectsDict.Add(groupSchoolOthersUri, new ImportListItem { HrGroup = _hrGroup });
+                                }
+                            }
+                        }
+
+                        if (generateAggrGroupsForUnits && aggrGroupOrgUnitIds.Contains(orgUnitId))
+                        {
+                            var depth = aggrGroupOrgUnitsParams[orgUnitId];
+
+                            aggrGroupOrgUnitUrisAndSearchDepth.Add(orgElementItemUri, depth);
+                        }
+
+                        if (generateOrgUnitGroups)
+                        {
+                            var groupUri = orgElementItemUri + Delimiter.suffix + GroupType.ougroup;
+                            var _hrGroup = HROrgFactory.Create(groupUri, GroupType.ougroup, _hrUnit, configParameters);
+                            //var groupIDUri = _hrGroup.GroupIDUri;
+
+                            if (!importedObjectsDict.TryGetValue(groupUri, out ImportListItem orgValue))
+                            {
+                                _hrGroup.GroupOwner = lederUri;
+                                _hrGroup.GroupParent = overordnetOrgElementUri + Delimiter.suffix + GroupType.ougroup;
+
+                                // only active employees will be added to the group as members. This is done later in the code
+                                importedObjectsDict.Add(_hrGroup.GroupIDUri, new ImportListItem { HrGroup = _hrGroup });
+                                groupsList.Add(groupUri);
+                            }
+                        }
+                    }
+
+                }
+
+            }
+            foreach (var schoolOrgUnitUri in allSchoolOrgUnitUris)
+            {
+                var baseParentIsSchoolUnit = true;
+                SetParentBaseUrisOnSubUnits(schoolOrgUnitUri, schoolOrgUnitUri, importedObjectsDict, baseParentIsSchoolUnit);
+            }
+            
+            if (generateAggrGroupsForUnits)
+            {
+                foreach (string orgElementUri in aggrGroupOrgUnitUrisAndSearchDepth.Keys)
+                {
+                    int depth = aggrGroupOrgUnitUrisAndSearchDepth[orgElementUri];
+
+                    List<string> aggrGroupOrgUnitUris = GetSubOrgUnitUris(orgElementUri, depth, importedObjectsDict);
+
+                    foreach (var uri in aggrGroupOrgUnitUris)
+                    {
+                        if (!allAggrGroupOrgUnitUris.Contains(uri))
+                        {
+                            allAggrGroupOrgUnitUris.Add(uri);
+                        }
+                    }                    
+                }
+                foreach (var aggrGroupOrgUnitUri in allAggrGroupOrgUnitUris)
+                {
+                    Logger.Log.Debug($"Trying to add aggrgroups for {aggrGroupOrgUnitUri} to CS");
+                    if (importedObjectsDict.TryGetValue(aggrGroupOrgUnitUri, out ImportListItem hrUnitImportListItem))
+                    {
+                        var thisHrUnit = hrUnitImportListItem.HrUnit;
+
+                        var _hrGroup = new HRGroup();
+                        var employeeGroupUri = string.Empty;
+                        var otherGroupUri = string.Empty;
+
+                        if (generateAllPersonalGroups)
+                        {
+                            var allPersonalAggrGroupUri = string.Empty;
+
+                            (allPersonalAggrGroupUri, _hrGroup) = GenerateAggrGroup(aggrGroupOrgUnitUri, GroupType.aggrAll, thisHrUnit, configParameters);
+
+                            if (!importedObjectsDict.TryGetValue(allPersonalAggrGroupUri, out ImportListItem dummyValue))
+                            {
+                                importedObjectsDict.Add(allPersonalAggrGroupUri, new ImportListItem { HrGroup = _hrGroup });
+                            }
+                        }
+
+                        (employeeGroupUri, _hrGroup) = GenerateAggrGroup(aggrGroupOrgUnitUri, GroupType.aggrEmp, thisHrUnit, configParameters);
+
+                        if (!importedObjectsDict.TryGetValue(employeeGroupUri, out ImportListItem dummyValue0))
+                        {
+                            importedObjectsDict.Add(employeeGroupUri, new ImportListItem { HrGroup = _hrGroup });
+                            Logger.Log.Debug($"Adding aggrgroup for {employeeGroupUri} to CS");
+                        }
+
+                        (otherGroupUri, _hrGroup) = GenerateAggrGroup(aggrGroupOrgUnitUri, GroupType.aggrOth, thisHrUnit, configParameters);
+
+                        if (!importedObjectsDict.TryGetValue(otherGroupUri, out ImportListItem dummyValue1))
+                        {
+                            importedObjectsDict.Add(otherGroupUri, new ImportListItem { HrGroup = _hrGroup });
+                            Logger.Log.Debug($"Adding aggrgroup for {otherGroupUri} to CS");
+                        }
+                    }
+                }
+                foreach (var orgUnitUri in allAggrGroupOrgUnitUris)
+                {
+                    SetParentBaseUrisOnSubUnits(orgUnitUri, orgUnitUri, importedObjectsDict);
+                }
+            }
+
+            if (generateOrgUnitGroups && putLeaderInParentGroup)
+            {
+                foreach (var groupIDUri in groupsList)
+                {
+                    if (importedObjectsDict.TryGetValue(groupIDUri, out ImportListItem importListItem))
+                    {
+                        var hrGroup = importListItem.HrGroup;
+
+                        var hrGroupOwner = hrGroup.GroupOwner;
+
+                        if (!string.IsNullOrEmpty(hrGroupOwner))
+                        {
+                            var parentUri = hrGroup.GroupParent;
+
+                            if (importedObjectsDict.TryGetValue(parentUri, out ImportListItem parentImportListItem))
+                            {
+                                var parentHrGroup = parentImportListItem.HrGroup;
+
+                                var parentHrGroupMembers = parentHrGroup.GroupMembers;
+
+                                if (!parentHrGroupMembers.Contains(hrGroupOwner))
+                                {
+                                    parentHrGroupMembers.Add(hrGroupOwner);
+                                }
+                            }
+                        }                            
+                    }
+                }
+            }
+
+            Logger.Log.Info("Finished parsing and generating org units and org unit groups");
+
+            Logger.Log.Info("Start parsing arbeidsforhold");
             string startValue = configParameters[Param.daysBeforeEmploymentStarts].Value;
             int dayBeforeEmploymentStarts = (string.IsNullOrEmpty(startValue)) ? 0 : Int32.Parse(startValue);
 
@@ -673,6 +1145,9 @@ namespace VigoBAS.FINT.HR
             //HashSet<string> excludedEmploymentTypes = new HashSet<string>();
 
             var paramFilterEmploymentTypes = configParameters[Param.filterEmploymentTypes].Value;
+            var paramfilterEmploymentTypesInActiveUsers = configParameters[Param.filterEmploymentTypesInActiveUsers].Value;
+
+            var filterEmploymentTypesInActiveUsersList = !String.IsNullOrEmpty(paramfilterEmploymentTypesInActiveUsers) ? paramfilterEmploymentTypesInActiveUsers.Split(',') : null;
 
             Dictionary<string, (string Filtertype, List<string> EmploymenttypeList)> filterEmpTypesPerResourceTypeDict = new Dictionary<string, (string, List<string>)>();
             List<string> globalExcludedEmploymentTypes = new List<string>();
@@ -722,7 +1197,7 @@ namespace VigoBAS.FINT.HR
                     }
 
                     var employmentTypes = filterValue[1].Split(',');
-                    foreach (var employmentType in employmentTypes )
+                    foreach (var employmentType in employmentTypes)
                     {
                         employmentTypeList.Add(employmentType);
                     }
@@ -772,13 +1247,25 @@ namespace VigoBAS.FINT.HR
                     if (_personalressursIdMappingDict.TryGetValue(personalressursLinkUri, out string personalressursUri))
                     {
                         var state = arbeidsforhold.State;
-                        if (state.TryGetValue(FintAttribute.gyldighetsperiode, out IStateValue employmentPeriod))
+
+                        if (state.TryGetValue(FintAttribute.gyldighetsperiode, out IStateValue validPeriod))
                         {
-                            EmploymentPeriodType employmentPeriodType = CheckValidPeriod(personalressursUri, arbeidforholdSystemUri, employmentPeriod, dayBeforeEmploymentStarts, daysAfterEmploymentEnds, employmentCompareDate);
+                            if (state.TryGetValue(FintAttribute.arbeidsforholdsperiode, out IStateValue employmentPeriod))
+                            {
+
+                            }
+                            EmploymentPeriodType employmentPeriodType = CheckValidPeriod(personalressursUri, arbeidforholdSystemUri, validPeriod, employmentPeriod, dayBeforeEmploymentStarts, daysAfterEmploymentEnds, employmentCompareDate);
 
                             if (employmentPeriodType != EmploymentPeriodType.InvalidPeriod)
                             {
-                                if (personalressursDict.TryGetValue(personalressursUri, out IEmbeddedResourceObject personalResourceData))
+                                if (arbeidsforhold.Links.TryGetValue(ResourceLink.arbeidssted, out IEnumerable<ILinkObject> arbeidsStedLink))
+                                {
+                                    var arbeidsstedUri = LinkToString(arbeidsStedLink);
+
+                                    if (importedObjectsDict.TryGetValue(arbeidsstedUri, out ImportListItem dummyImportListItem))
+                                    {
+
+                                        if (personalressursDict.TryGetValue(personalressursUri, out IEmbeddedResourceObject personalResourceData))
                                 {
                                     var personalResourceLinks = personalResourceData.Links;
                                     if (personalResourceLinks.TryGetValue(ResourceLink.resourceCategory, out IEnumerable<ILinkObject> resourceCategoryLink))
@@ -872,6 +1359,16 @@ namespace VigoBAS.FINT.HR
                                         }
                                     }
                                 }
+                                    }
+                                    else
+                                    {
+                                        Logger.Log.Error($"Active arbeidsforhold {arbeidforholdSystemUri} is related to inactive/missing organisasjonselement {arbeidsstedUri}");
+                                    }
+                                }
+                                else
+                                {
+                                    Logger.Log.Error($"Active arbeidsforhold {arbeidforholdSystemUri} is missing mandatory relation to {ResourceLink.arbeidssted}");
+                                }
                             }
                         }
                     }
@@ -882,469 +1379,12 @@ namespace VigoBAS.FINT.HR
                         Logger.Log.Error(message);
                     }
                 }
-            }
-            bool useOrgUnitCodeAsParameter = configParameters[Param.brukOrganisasjonsKode].Value == "1";
 
-            bool generateAllPersonalGroups = configParameters[Param.genererAllePersonalKategoriGrupper].Value == "1";
-            bool generateOrgUnitGroups = configParameters[Param.genererOrgEnhetGrupper].Value == "1";
-            bool putLeaderAsMemberInGroup = configParameters[Param.leggTilLederSomMedlemIGruppe].Value == "1";
-            bool putLeaderInParentGroup = configParameters[Param.leggTilLedereIOverordnetGruppe].Value == "1";
-            bool findAlwaysManagerForEmployee = configParameters[Param.finnAlltidLederForAnsatt].Value == "1";
-
-            bool generateGroupAllEmployees= configParameters[Param.genererAggrGruppeAlleAnsatte].Value == "1";
-            bool generateGroupAllPoliticians = configParameters[Param.genererAggrGruppeAllePolitikere].Value == "1";
-            bool generateGroupAllOthers = configParameters[Param.genererAggrGruppeAlleAndre].Value == "1";
-            bool generateGroupAllLeaders = configParameters[Param.genererAggrGruppeAlleLedere].Value == "1";
-
-            bool generateGroupsAllTeachersNonTeacherEmployees = configParameters[Param.genererAggrGrupperAlleLarerAdmin].Value == "1";
-            bool generateAggrGroupsForUnits = configParameters[Param.genererAggrGrupperForenheter].Value == "1";
-
-            bool generateSchoolGroups = configParameters[Param.genererLarerAdmAnsGrupper].Value == "1";
-            
-            HashSet<string> employeeResourceCategories = GetConfigParameterList(configParameters, Param.gruppeAlleAnsatteRessurskategorier);
-            HashSet<string> employeeEmploymentTypes = GetConfigParameterList(configParameters, Param.gruppeAlleAnsatteArbeidsforholdtyper);
-
-            HashSet<string> politicianResourceCategories = GetConfigParameterList(configParameters, Param.gruppeAllePolitikerRessurskategorier);
-            HashSet<string> politicianEmploymentTypes = GetConfigParameterList(configParameters, Param.gruppeAllePolitikereArbeidsforholdtyper);
-
-            HashSet<string> otherResourceCategories = GetConfigParameterList(configParameters, Param.gruppeAlleAndreRessurskategorier);
-            HashSet<string> otherEmploymentTypes = GetConfigParameterList(configParameters, Param.gruppeAlleAndreArbeidsforholdtyper);
-
-            HashSet<string> teacherEmploymentTypes = GetConfigParameterList(configParameters, Param.larerArbeidsforholdtyper);
-
-            HashSet<string> allSchoolOrgUnitIds = GetConfigParameterList(configParameters, Param.alleSkoleEnheter);
-
-            Dictionary<string, int> aggrGroupOrgUnitsParams = GetAggrGroupForUnitsParameters(configParameters, Param.enheterAggrGrupper);
-            var aggrGroupOrgUnitIds = aggrGroupOrgUnitsParams.Keys;
-            Dictionary<string, int> aggrGroupOrgUnitUrisAndSearchDepth = new Dictionary<string, int>();
-
-
-            //string GrpSuffix = configParameters[Param.GruppeSuffix].Value;
-
-            Dictionary<string, List<string>> leaderOfUnitDict = new Dictionary<string, List<string>>();
-
-            Dictionary<string, string> orgUnitIdToOrgUnitUri = new Dictionary<string, string>();
-
-            Dictionary<string, string> orgUnitUriToSchoolOrgUnit = new Dictionary<string, string>();
-
-            List<string> allSchoolOrgUnitUris = new List<string>();
-            List<string> allAggrGroupOrgUnitUris = new List<string>();
-
-            List<string> groupsList = new List<string>();
-
-            int noOfOrgElements = 0;
-
-            string topOrgElementItemUri = string.Empty;
-            string hrOrganizationUri = string.Empty;
-            string hrStandardBusinessUnitUri = string.Empty;
-
-            string groupAllPersonalUri = string.Empty;
-            string groupAllEmployeesUri = string.Empty;
-            string groupAllPoliticiansUri = string.Empty;
-            string groupAllOthersUri = string.Empty;
-            string groupAllLeadersUri = string.Empty;
-            string groupAllTeachersUri = string.Empty;
-            string groupAllSchoolAdmUri = string.Empty;
-            string groupAllNonSchoolAdmUri = string.Empty;
-            string groupAllSchoolOthUri = string.Empty;
-            string groupAllNonSchoolOthUri = string.Empty;
-
-            foreach (var orgElementItem in organisasjonselementDict)
-            {
-                var orgElementItemUri = orgElementItem.Key;
-
-                Logger.Log.Debug($"Start reading orgelement {orgElementItemUri} into importedObjectsDict");
-
-                var orgElement = orgElementItem.Value;
-
-                if (!importedObjectsDict.TryGetValue(orgElementItemUri, out ImportListItem unitValue))
-                {
-                    var _hrUnit = HROrgFactory.Create(orgElementItemUri, orgElement.State);
-
-                    var lederUri = string.Empty;
-                    var overordnetOrgElementUri = string.Empty;
-                    var underordnetUris = new List<string>();
-
-                    var orgElementLinks = orgElement.Links;
-
-                    if (orgElementLinks.TryGetValue(ResourceLink.leder, out IEnumerable<ILinkObject> lederLink))
-                    {
-                        var lederLinkUri = LinkToString(lederLink);
-
-                        if (_personalressursIdMappingDict.TryGetValue(lederLinkUri, out string mappedLederUri))
-                        {
-                            lederUri = mappedLederUri;
-
-                            if (!leaderOfUnitDict.TryGetValue(lederUri, out List<string> orgelementer))
-                            {
-                                var orgelementList = new List<string>();
-                                orgelementList.Add(orgElementItemUri);
-
-                                leaderOfUnitDict.Add(lederUri, orgelementList);
-                            }
-                            else
-                            {
-                                orgelementer.Add(orgElementItemUri);
-                                leaderOfUnitDict[lederUri] = orgelementer;
-                            }
-                        }
-                        else
-                        {
-                            string message = $"{lederLinkUri} is referenced as leder by {orgElementItemUri}";
-                            message += $"but the resource is missing on the {DefaultValue.administrasjonPersonalPersonalRessursUri} endpoint";
-                            Logger.Log.Error(message);
-
-                        }
-                    }
-                    if (orgElementLinks.TryGetValue(ResourceLink.overordnet, out IEnumerable<ILinkObject> overordnetLink))
-                    {
-                        overordnetOrgElementUri = LinkToString(overordnetLink);
-
-                        if (overordnetOrgElementUri == orgElementItemUri)
-                        {
-                            topOrgElementItemUri = orgElementItemUri;
-
-                            if (string.IsNullOrEmpty(_hrUnit.OrganisasjonselementNavn))
-                            {
-                                var organizationName = configParameters[Param.organisasjonsnavn].Value;
-                                _hrUnit.OrganisasjonselementNavn = organizationName;
-                            }
-                            if (string.IsNullOrEmpty(_hrUnit.OrganisasjonselementKortnavn))
-                            {
-                                var organizationShortname = configParameters[Param.organisasjonskortnavn].Value;
-                                _hrUnit.OrganisasjonselementKortnavn = organizationShortname;
-                            }
-                            if (string.IsNullOrEmpty(_hrUnit.OrganisasjonselementOrganisasjonsnummer))
-                            {
-                                var organizationNumber = configParameters[Param.organisasjonsnummer].Value;
-                                _hrUnit.OrganisasjonselementOrganisasjonsnummer = organizationNumber;
-                            }
-                            var hrOrganization = HROrgFactory.Create(_hrUnit);
-                            hrOrganizationUri = hrOrganization.HROrganizationUri;
-                            hrOrganization.HROrganizationEmailAddress = configParameters[Param.organisasjonEpostadresse].Value;
-
-                            importedObjectsDict.Add(hrOrganizationUri, new ImportListItem { HrOrganization = hrOrganization });
-
-                            // create default business unit (fallback)  
-
-                            string standardBusinessUnitName = configParameters[Param.standardBusinessUnitName].Value;
-                            string standardBusinessUnitOrgNo = configParameters[Param.standardBusinessUnitOrgNo].Value;
-                            string standardBusinessUnitEmailAddress = configParameters[Param.standardBusinessUnitEmailAddress].Value;
-
-                            if (!string.IsNullOrEmpty(standardBusinessUnitName) && !string.IsNullOrEmpty(standardBusinessUnitOrgNo) && !string.IsNullOrEmpty(standardBusinessUnitEmailAddress))
-                            {
-                                hrStandardBusinessUnitUri = topOrgElementItemUri + Delimiter.suffix + DefaultValue.businessUnitSuffix;
-
-                                var standardBusinessUnit = new HRBusinessUnit
-                                {
-                                    BusinessUnitUri = hrStandardBusinessUnitUri,
-                                    BusinessUnitName = standardBusinessUnitName,
-                                    BusinessUnitOrganizationNumber = standardBusinessUnitOrgNo,
-                                    BusinessUnitEmailAddress = standardBusinessUnitEmailAddress
-                                };
-                                importedObjectsDict.Add(hrStandardBusinessUnitUri, new ImportListItem { HrBusinessUnit = standardBusinessUnit });
-                            }
-                        }
-                        var orgCode = _hrUnit.OrganisasjonselementOrganisasjonsKode;
-
-                        if (allSchoolOrgUnitIds.Contains(orgCode))
-                        {
-                            var hrBusinessUnit = HROrgFactory.Create(_hrUnit, DefaultValue.businessUnitSuffix);
-                            var hrBusinessUnitUri = hrBusinessUnit.BusinessUnitUri;
-                            importedObjectsDict.Add(hrBusinessUnitUri, new ImportListItem { HrBusinessUnit = hrBusinessUnit });
-                        }
-                    }
-                    if (orgElementLinks.TryGetValue(ResourceLink.underordnet, out IEnumerable<ILinkObject> underordnetLink))
-                    {
-                        underordnetUris = LinksToStrings(underordnetLink);
-                    }
-                    _hrUnit.OrganisasjonselementLeder = lederUri;                    
-                    _hrUnit.OrganisasjonselementOverordnet = overordnetOrgElementUri;
-                    _hrUnit.OrganisasjonselementUnderordnet = underordnetUris;
-                    
-                    importedObjectsDict.Add(orgElementItemUri, new ImportListItem { HrUnit = _hrUnit });
-                    Logger.Log.Debug($"Adding hrUnit object {orgElementItemUri} to importedObjectsDict");
-
-                    var orgUnitId = (useOrgUnitCodeAsParameter) ? _hrUnit.OrganisasjonselementOrganisasjonsKode : _hrUnit.OrganisasjonselementOrganisasjonsid;
-                    orgUnitIdToOrgUnitUri.Add(orgUnitId, orgElementItemUri);
-                    
-                    noOfOrgElements++;
-
-                    if (generateAllPersonalGroups || generateGroupAllEmployees || generateGroupAllPoliticians || generateGroupAllOthers || generateGroupAllLeaders || generateGroupsAllTeachersNonTeacherEmployees)
-                    {
-                        if (overordnetOrgElementUri == orgElementItemUri)
-                        {
-                            var _hrGroup = new HRGroup();
-                            var orgElementState = orgElement.State;
-
-                            if (generateAllPersonalGroups)
-                            {
-                                (groupAllPersonalUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrAll, _hrUnit, configParameters);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllPersonalUri, out ImportListItem dummyValue))
-                                {
-                                    importedObjectsDict.Add(groupAllPersonalUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-                            }
-
-                            if (generateGroupAllEmployees)
-                            {
-                                (groupAllEmployeesUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrEmp, _hrUnit, configParameters);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllEmployeesUri, out ImportListItem dummyValue))
-                                {
-                                    importedObjectsDict.Add(groupAllEmployeesUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-                            }
-                            if (generateGroupAllPoliticians)
-                            {
-                                (groupAllPoliticiansUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrPol, _hrUnit, configParameters);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllPoliticiansUri, out ImportListItem dummyValue))
-                                {
-                                    importedObjectsDict.Add(groupAllPoliticiansUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-                            }
-                            if (generateGroupAllOthers)
-                            {
-                                (groupAllOthersUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrOth, _hrUnit, configParameters);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllOthersUri, out ImportListItem dummyValue))
-                                {
-                                    importedObjectsDict.Add(groupAllOthersUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-                            }
-                            if (generateGroupAllLeaders)
-                            {
-                                (groupAllLeadersUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri, GroupType.aggrMan, _hrUnit, configParameters);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllLeadersUri, out ImportListItem dummyValue))
-                                {
-                                    importedObjectsDict.Add(groupAllLeadersUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-                            }
-                            if (generateGroupsAllTeachersNonTeacherEmployees)
-                            {                               
-                                var isSchoolNonSchoolGroup = true;
-
-                                var isSchoolGroup = true;
-
-                                (groupAllTeachersUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.schoolTag, GroupType.aggrFac, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllTeachersUri, out ImportListItem dummyValue))
-                                {
-                                    importedObjectsDict.Add(groupAllTeachersUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-
-                                (groupAllSchoolAdmUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.schoolTag, GroupType.aggrAdm, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllSchoolAdmUri, out ImportListItem dummyValue1))
-                                {
-                                    importedObjectsDict.Add(groupAllSchoolAdmUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-
-                                (groupAllSchoolOthUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.schoolTag, GroupType.aggrOth, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllSchoolOthUri, out ImportListItem dummyValue3))
-                                {
-                                    importedObjectsDict.Add(groupAllSchoolOthUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-
-                                isSchoolGroup = false;
-
-                                (groupAllNonSchoolAdmUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.nonSchoolTag, GroupType.aggrAdm, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllNonSchoolAdmUri, out ImportListItem dummyValue2))
-                                {
-                                    importedObjectsDict.Add(groupAllNonSchoolAdmUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-
-                                (groupAllNonSchoolOthUri, _hrGroup) = GenerateAggrGroup(topOrgElementItemUri + DefaultValue.nonSchoolTag, GroupType.aggrOth, _hrUnit, configParameters, isSchoolGroup, isSchoolNonSchoolGroup);
-
-                                if (!importedObjectsDict.TryGetValue(groupAllNonSchoolOthUri, out ImportListItem dummyValue4))
-                                {
-                                    importedObjectsDict.Add(groupAllNonSchoolOthUri, new ImportListItem { HrGroup = _hrGroup });
-                                }
-                            }
-                        }
-                    }
-                    if (generateSchoolGroups && allSchoolOrgUnitIds.Contains(orgUnitId))
-                    {
-                        var isSchoolGroup = true;
-                        var _hrGroup = new HRGroup();
-                        var groupSchoolEmployeesUri = string.Empty;
-                        var groupTeachersUri = string.Empty;
-                        var groupSchoolAdminsUri = string.Empty;
-                        var groupSchoolOthersUri = string.Empty;
-
-                        if (generateAllPersonalGroups)
-                        {
-                            var groupSchoolAllPersonalUri = string.Empty;
-
-                            (groupSchoolAllPersonalUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrAll, _hrUnit, configParameters, isSchoolGroup);
-
-                            if (!importedObjectsDict.TryGetValue(groupSchoolAllPersonalUri, out ImportListItem dummyValue0))
-                            {
-                                importedObjectsDict.Add(groupSchoolAllPersonalUri, new ImportListItem { HrGroup = _hrGroup });
-                            }
-                        }
-
-                        (groupSchoolEmployeesUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrEmp, _hrUnit, configParameters, isSchoolGroup);
-
-                        if (!importedObjectsDict.TryGetValue(groupSchoolEmployeesUri, out ImportListItem dummyValue))
-                        {
-                            importedObjectsDict.Add(groupSchoolEmployeesUri, new ImportListItem { HrGroup = _hrGroup });
-                        }
-
-                        (groupTeachersUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrFac, _hrUnit, configParameters, isSchoolGroup);
-
-                        if (!importedObjectsDict.TryGetValue(groupTeachersUri, out ImportListItem dummyValue1))
-                        {
-                            importedObjectsDict.Add(groupTeachersUri, new ImportListItem { HrGroup = _hrGroup });
-                        }
-
-                        (groupSchoolAdminsUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrAdm, _hrUnit, configParameters, isSchoolGroup);
-
-                        if (!importedObjectsDict.TryGetValue(groupSchoolAdminsUri, out ImportListItem dummyValue2))
-                        {
-                            importedObjectsDict.Add(groupSchoolAdminsUri, new ImportListItem { HrGroup = _hrGroup });
-                        }
-
-                        (groupSchoolOthersUri, _hrGroup) = GenerateAggrGroup(orgElementItemUri, GroupType.aggrOth, _hrUnit, configParameters, isSchoolGroup);
-
-                        if (!importedObjectsDict.TryGetValue(groupSchoolOthersUri, out ImportListItem dummyValue3))
-                        {
-                            importedObjectsDict.Add(groupSchoolOthersUri, new ImportListItem { HrGroup = _hrGroup });
-                        }
-                        allSchoolOrgUnitUris.Add(orgElementItemUri);
-                    }
-
-                    if (generateAggrGroupsForUnits && aggrGroupOrgUnitIds.Contains(orgUnitId))
-                    {
-                        var depth = aggrGroupOrgUnitsParams[orgUnitId];
-
-                        aggrGroupOrgUnitUrisAndSearchDepth.Add(orgElementItemUri, depth);
-                    }
-
-                    if (generateOrgUnitGroups)
-                    {
-                        var groupUri = orgElementItemUri + Delimiter.suffix + GroupType.ougroup;
-                        var _hrGroup = HROrgFactory.Create(groupUri, GroupType.ougroup, _hrUnit, configParameters);
-                        //var groupIDUri = _hrGroup.GroupIDUri;
-
-                        if (!importedObjectsDict.TryGetValue(groupUri, out ImportListItem orgValue))
-                        {
-                            _hrGroup.GroupOwner = lederUri;
-                            _hrGroup.GroupParent = overordnetOrgElementUri + Delimiter.suffix + GroupType.ougroup;
-
-                            // only active employees will be added to the group as members. This is done later in the code
-                            importedObjectsDict.Add(_hrGroup.GroupIDUri, new ImportListItem { HrGroup = _hrGroup });
-                            groupsList.Add(groupUri);
-                        }
-                    }
-                }
-            }
-            if (generateGroupsAllTeachersNonTeacherEmployees)
-            {
-                foreach (var schoolOrgUnitUri in allSchoolOrgUnitUris)
-                {
-                    var baseParentIsSchoolUnit = true;
-                    SetParentBaseUrisOnSubUnits(schoolOrgUnitUri, schoolOrgUnitUri, importedObjectsDict, baseParentIsSchoolUnit);
-                }
-            }
-            if (generateAggrGroupsForUnits)
-            {
-                foreach (string orgElementUri in aggrGroupOrgUnitUrisAndSearchDepth.Keys)
-                {
-                    int depth = aggrGroupOrgUnitUrisAndSearchDepth[orgElementUri];
-
-                    List<string> aggrGroupOrgUnitUris = GetSubOrgUnitUris(orgElementUri, depth, importedObjectsDict);
-
-                    foreach (var uri in aggrGroupOrgUnitUris)
-                    {
-                        if (!allAggrGroupOrgUnitUris.Contains(uri))
-                        {
-                            allAggrGroupOrgUnitUris.Add(uri);
-                        }
-                    }                    
-                }
-                foreach (var aggrGroupOrgUnitUri in allAggrGroupOrgUnitUris)
-                {
-                    Logger.Log.Debug($"Trying to add aggrgroups for {aggrGroupOrgUnitUri} to CS");
-                    if (importedObjectsDict.TryGetValue(aggrGroupOrgUnitUri, out ImportListItem hrUnitImportListItem))
-                    {
-                        var thisHrUnit = hrUnitImportListItem.HrUnit;
-
-                        var _hrGroup = new HRGroup();
-                        var employeeGroupUri = string.Empty;
-                        var otherGroupUri = string.Empty;
-
-                        if (generateAllPersonalGroups)
-                        {
-                            var allPersonalAggrGroupUri = string.Empty;
-
-                            (allPersonalAggrGroupUri, _hrGroup) = GenerateAggrGroup(aggrGroupOrgUnitUri, GroupType.aggrAll, thisHrUnit, configParameters);
-
-                            if (!importedObjectsDict.TryGetValue(allPersonalAggrGroupUri, out ImportListItem dummyValue))
-                            {
-                                importedObjectsDict.Add(allPersonalAggrGroupUri, new ImportListItem { HrGroup = _hrGroup });
-                            }
-                        }
-
-                        (employeeGroupUri, _hrGroup) = GenerateAggrGroup(aggrGroupOrgUnitUri, GroupType.aggrEmp, thisHrUnit, configParameters);
-
-                        if (!importedObjectsDict.TryGetValue(employeeGroupUri, out ImportListItem dummyValue0))
-                        {
-                            importedObjectsDict.Add(employeeGroupUri, new ImportListItem { HrGroup = _hrGroup });
-                            Logger.Log.Debug($"Adding aggrgroup for {employeeGroupUri} to CS");
-                        }
-
-                        (otherGroupUri, _hrGroup) = GenerateAggrGroup(aggrGroupOrgUnitUri, GroupType.aggrOth, thisHrUnit, configParameters);
-
-                        if (!importedObjectsDict.TryGetValue(otherGroupUri, out ImportListItem dummyValue1))
-                        {
-                            importedObjectsDict.Add(otherGroupUri, new ImportListItem { HrGroup = _hrGroup });
-                            Logger.Log.Debug($"Adding aggrgroup for {otherGroupUri} to CS");
-                        }
-                    }
-                }
-                foreach (var orgUnitUri in allAggrGroupOrgUnitUris)
-                {
-                    SetParentBaseUrisOnSubUnits(orgUnitUri, orgUnitUri, importedObjectsDict);
-                }
             }
 
-            if (generateOrgUnitGroups && putLeaderInParentGroup)
-            {
-                foreach (var groupIDUri in groupsList)
-                {
-                    if (importedObjectsDict.TryGetValue(groupIDUri, out ImportListItem importListItem))
-                    {
-                        var hrGroup = importListItem.HrGroup;
+            Logger.Log.Info("Finished parsing arbeidsforhold and generating for CS");
 
-                        var hrGroupOwner = hrGroup.GroupOwner;
-
-                        if (!string.IsNullOrEmpty(hrGroupOwner))
-                        {
-                            var parentUri = hrGroup.GroupParent;
-
-                            if (importedObjectsDict.TryGetValue(parentUri, out ImportListItem parentImportListItem))
-                            {
-                                var parentHrGroup = parentImportListItem.HrGroup;
-
-                                var parentHrGroupMembers = parentHrGroup.GroupMembers;
-
-                                if (!parentHrGroupMembers.Contains(hrGroupOwner))
-                                {
-                                    parentHrGroupMembers.Add(hrGroupOwner);
-                                }
-                            }
-                        }                            
-                    }
-                }
-            }            
-            // Parse all active employment entries
-
+            Logger.Log.Info("Start parsing personalressurs resources and generating Person objects for CS");
             int noOfPersonalResources = 0;
 
             bool usernameToLowerCase = configParameters[Param.usernameToLowerCase].Value == "1";
@@ -1570,9 +1610,7 @@ namespace VigoBAS.FINT.HR
                             }
                             _arbeidsforhold = ArbeidsforholdResourceFactory.Create(arbeidsforhold);
 
-                            var hovedstilling = _arbeidsforhold.Hovedstilling;
-
-                            if (hovedstilling)
+                            if (_arbeidsforhold.Hovedstilling)
                             {
                                 hovedstillingsUri = employmentUri;
                             }
@@ -1700,17 +1738,39 @@ namespace VigoBAS.FINT.HR
                             }
 
                         }
+                    } //
+                    
+                    if (string.IsNullOrEmpty(hovedstillingsUri))
+                    {                        
+                        hovedstillingsUri = employments[0];
+                        Logger.Log.Info($"No primary employment set in HR for employee {personalResourceUri}. Active employment {hovedstillingsUri} set as primary");
                     }
 
-                    if (string.IsNullOrEmpty(hovedstillingsUri))
-                    {
-                        hovedstillingsUri = employments[0];
-                    }
+                    HREmployment hovedstillingCandicate = new HREmployment();
+
                     if (importedObjectsDict.TryGetValue(hovedstillingsUri, out ImportListItem importListItem))
                     {
-                        HREmployment hovedstilling = importListItem.HrEmployment;
-                        _hovedstillingsInfo = HovedstillingInfoFactory.Create(hovedstilling);//, employmentUri, _arbeidsforhold, _stillingskode, _arbeidssted);
+                        hovedstillingCandicate = importListItem.HrEmployment;                        
+                    }                    
+
+                    if (hovedstillingCandicate != null && filterEmploymentTypesInActiveUsersList != null && filterEmploymentTypesInActiveUsersList.Contains(hovedstillingCandicate.ArbeidsforholdstypeKode))
+                    {
+                        Logger.Log.Info($"Primary employment {hovedstillingsUri} has type {hovedstillingCandicate.ArbeidsforholdstypeKode} indicating this employment gives an inactive user for employee {personalResourceUri}");
+                        foreach (var employmentUri in employments)
+                        {
+                            if (importedObjectsDict.TryGetValue(employmentUri, out ImportListItem employmentItem))
+                            {
+                                hovedstillingCandicate = employmentItem.HrEmployment;
+                                if (!filterEmploymentTypesInActiveUsersList.Contains(hovedstillingCandicate.ArbeidsforholdstypeKode))
+                                {
+                                    Logger.Log.Info($"Active employment {employmentUri} for employee {personalResourceUri} is set as primary instead of {hovedstillingsUri}");
+                                    break;
+                                }
+                            }                            
+                        }
                     }
+
+                    _hovedstillingsInfo = HovedstillingInfoFactory.Create(hovedstillingCandicate);//, employmentUri, _arbeidsforhold, _stillingskode, _arbeidssted);
 
                     var managerUri = string.Empty;
 
@@ -1826,8 +1886,9 @@ namespace VigoBAS.FINT.HR
                 }
                 #endregion
             }
+            Logger.Log.Info("Finished parsing personalressurs resources");
 
-            Logger.Log.Info($"Number of organisasjonselement resources are: {noOfOrgElements.ToString()}");
+            Logger.Log.Info($"Number of active organisasjonselement resources are: {noOfOrgElements.ToString()}");
             Logger.Log.Info($"Number of active personalressurs resources are: {noOfPersonalResources.ToString()}");
             Logger.Log.Info($"Number of active arbeidsforhold resources are: { noOfEmployments.ToString()}");
 
@@ -2245,6 +2306,8 @@ namespace VigoBAS.FINT.HR
         }
         private void AddMemberToHRGroup (string groupUri, string personalResourceUri, Dictionary<string, ImportListItem> importedObjectsDict, bool putLeaderAsMemberInGroup=false)
         {
+            Logger.Log.Debug($"Trying to add {personalResourceUri} to group {groupUri}");
+
             if (importedObjectsDict.TryGetValue(groupUri, out ImportListItem groupItem))
             {
                 var group = groupItem.HrGroup;
@@ -2981,36 +3044,63 @@ namespace VigoBAS.FINT.HR
             return (aggrGroupUri , hrGroup);
         }
 
-        private static EmploymentPeriodType CheckValidPeriod(string personalressursUri, string arbeidsforholdUri, IStateValue periodeValue, int daysBefore, int daysAhead, DateTime employmentCompareDate)
+        private static EmploymentPeriodType CheckValidPeriod(string personalressursUri, string arbeidsforholdUri, IStateValue gyldighetsperiodeValue, IStateValue arbeidsforholdperiodeValue, int daysBefore, int daysAhead, DateTime employmentCompareDate)
         {
+            if (arbeidsforholdperiodeValue.Value != null)
+            {
+                var employmentPeriod = JsonConvert.DeserializeObject<Periode>(arbeidsforholdperiodeValue.Value);
+                var employmentPeriodStart = employmentPeriod.Start;
+                var calculatedEmploymentPeriodStart = employmentPeriodStart.AddDays(-daysBefore);
+                var calculatedEmploymentPeriodSlutt = (employmentPeriod?.Slutt != null) ? employmentPeriod.Slutt?.AddDays(daysAhead) : DateTime.Parse(infinityDate);
+
+                if (employmentCompareDate < calculatedEmploymentPeriodStart || employmentCompareDate > calculatedEmploymentPeriodSlutt)
+                {
+                    Logger.Log.Info($"{personalressursUri}: Invalid employment {arbeidsforholdUri}. Employment compare date {employmentCompareDate.ToString(dateFormat)} is outside calculated employment period {calculatedEmploymentPeriodStart.ToString(dateFormat)} - {calculatedEmploymentPeriodSlutt?.ToString(dateFormat)}");
+                    return EmploymentPeriodType.InvalidPeriod;
+                }
+            }
+
             var periodType = EmploymentPeriodType.InvalidPeriod;
 
-            var period = JsonConvert.DeserializeObject<Periode>(periodeValue.Value);
+            var validPeriod = JsonConvert.DeserializeObject<Periode>(gyldighetsperiodeValue.Value);
+            var validPeriodStart = validPeriod.Start;
+            var calculatedValidPeriodStart = validPeriodStart.AddDays(-daysBefore);
+            var validPeriodSlutt = (validPeriod?.Slutt != null) ? validPeriod.Slutt : DateTime.Parse(infinityDate);
+            var calulatedValidPeriodSlutt = (validPeriod?.Slutt != null) ? validPeriod.Slutt?.AddDays(daysAhead) : DateTime.Parse(infinityDate);
 
-            var periodStart = period.Start;
-            var calculatedPeriodStart = periodStart.AddDays(-daysBefore);
-            var periodSlutt = (period?.Slutt != null) ? period.Slutt : DateTime.Parse(infinityDate);
-            var calulatedPeriodSlutt = (period?.Slutt != null) ? period.Slutt?.AddDays(daysAhead) : DateTime.Parse(infinityDate);
-
-            if (calculatedPeriodStart <= employmentCompareDate && calulatedPeriodSlutt >= employmentCompareDate)
+            if (calculatedValidPeriodStart <= employmentCompareDate && calulatedValidPeriodSlutt >= employmentCompareDate )
             {
-                if (periodStart <= employmentCompareDate && periodSlutt >= employmentCompareDate)
+                if (validPeriodStart <= employmentCompareDate && validPeriodSlutt >= employmentCompareDate)
                 {
                     periodType = EmploymentPeriodType.ValidPresentPeriod;
-                    Logger.Log.Info($"{personalressursUri}: Valid present employment {arbeidsforholdUri}. PeriodStart {periodStart} is before and PeriodSlutt {periodSlutt} is after employment compare date {employmentCompareDate}");
+                    Logger.Log.Info($"{personalressursUri}: Valid present employment {arbeidsforholdUri}. PeriodStart {validPeriodStart.ToString(dateFormat)} is before and PeriodSlutt {validPeriodSlutt?.ToString(dateFormat)} is after employment compare date {employmentCompareDate.ToString(dateFormat)}");
                 }
-                else if (periodStart > employmentCompareDate)
+                else if (validPeriodStart > employmentCompareDate)
                 {
                     periodType = EmploymentPeriodType.ValidFuturePeriod;
-                    Logger.Log.Info($"{personalressursUri}: Valid future employment {arbeidsforholdUri}. PeriodStart {periodStart} is after employment compare date {employmentCompareDate} but calculated start date {calculatedPeriodStart} is before compare date");
+                    Logger.Log.Info($"{personalressursUri}: Valid future employment {arbeidsforholdUri}. PeriodStart {validPeriodStart.ToString(dateFormat)} is after employment compare date {employmentCompareDate.ToString(dateFormat)} but calculated start date {calculatedValidPeriodStart.ToString(dateFormat)} is before compare date");
                 }
                 else
                 {
                     periodType = EmploymentPeriodType.ValidPastPeriod;
-                    Logger.Log.Info($"{personalressursUri}: Valid past employment {arbeidsforholdUri}. PeriodSlutt {periodSlutt} is before employment compare date {employmentCompareDate} but after calculated end date {calulatedPeriodSlutt} is after compare date");
+                    Logger.Log.Info($"{personalressursUri}: Valid past employment {arbeidsforholdUri}. PeriodSlutt {validPeriodSlutt?.ToString(dateFormat)} is before employment compare date {employmentCompareDate.ToString(dateFormat)} but after calculated end date {calulatedValidPeriodSlutt?.ToString(dateFormat)} is after compare date");
                 }
             }
             return periodType;
+        }
+        private static bool IsOrgElementActive(HRUnit hrUnit)
+        {
+            var currentDate = DateTime.Today;
+            var startDate = DateTime.Parse(hrUnit.OrganisasjonselementPeriodeStart);
+            var endDate = !String.IsNullOrEmpty(hrUnit?.OrganisasjonselementPeriodeSlutt) ? DateTime.Parse(hrUnit.OrganisasjonselementPeriodeSlutt) : DateTime.Parse(infinityDate);
+
+            if (startDate <= currentDate && currentDate <= endDate)
+            {
+                Logger.Log.Info($"Org Unit {hrUnit.OrganisasjonselementNavn} ({hrUnit.OrganisasjonselementOrganisasjonsKode}) is active");
+                return true;
+            }
+            Logger.Log.Info($"Org Unit {hrUnit.OrganisasjonselementNavn} ({hrUnit.OrganisasjonselementOrganisasjonsKode}) is not active. Valid period: {hrUnit.OrganisasjonselementPeriodeStart} - {hrUnit.OrganisasjonselementPeriodeSlutt}");
+            return false;
         }
         #endregion
 
