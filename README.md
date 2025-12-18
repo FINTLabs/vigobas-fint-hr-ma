@@ -6,8 +6,17 @@ Management Agent for Microsoft Identity Manager (MIM). Syncs HR data with any HR
 
 Version 1.7.0 is the first public versjon. For older versions see: https://vigobas.vigoiks.no/VigoBAS/systemdokumentasjon/releasenotes/ 
 
-## Version 1.7.99
-This is the 1.8.0-beta
+
+## Version 1.9.0
+
+### Features
+* Updated to information model 3.21
+* Added bostedsadresse on person
+* Calculated valid employements based on ansettelsesperiode and gryldighetsperiode
+
+
+## Version 1.8.0
+
 ### Features
 * Added days after employment ends as config
 * Updated alle dependencies to latest released version, eg FINT ver 3.13.10
