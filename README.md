@@ -8,6 +8,7 @@ Version 1.7.0 is the first public versjon. For older versions see: https://vigob
 
 
 ## Version 1.9.0
+Released on 2025-12-18
 
 ### Features
 * Updated to information model 3.21
