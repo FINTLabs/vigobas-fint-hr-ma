@@ -56,7 +56,7 @@ jobs:
           cp *.zip ../..
           
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: vigobas-fint-hr-ma
           path: vigobas-fint-hr-ma-${{steps.get_tag.outputs.ID}}.zip
