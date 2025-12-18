@@ -33,7 +33,7 @@ jobs:
           msbuild.exe VigoBAS.FINT.HR.sln /p:platform="Any CPU" /p:Configuration="Release"
       
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: vigobas-fint-hr-ma
           path: bin/release/VigoBAS.FINT.HR.dll
