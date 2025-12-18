@@ -1247,9 +1247,14 @@ namespace VigoBAS.FINT.HR
                     if (_personalressursIdMappingDict.TryGetValue(personalressursLinkUri, out string personalressursUri))
                     {
                         var state = arbeidsforhold.State;
-                        if (state.TryGetValue(FintAttribute.gyldighetsperiode, out IStateValue employmentPeriod))
+
+                        if (state.TryGetValue(FintAttribute.gyldighetsperiode, out IStateValue validPeriod))
                         {
-                            EmploymentPeriodType employmentPeriodType = CheckValidPeriod(personalressursUri, arbeidforholdSystemUri, employmentPeriod, dayBeforeEmploymentStarts, daysAfterEmploymentEnds, employmentCompareDate);
+                            if (state.TryGetValue(FintAttribute.arbeidsforholdsperiode, out IStateValue employmentPeriod))
+                            {
+
+                            }
+                            EmploymentPeriodType employmentPeriodType = CheckValidPeriod(personalressursUri, arbeidforholdSystemUri, validPeriod, employmentPeriod, dayBeforeEmploymentStarts, daysAfterEmploymentEnds, employmentCompareDate);
 
                             if (employmentPeriodType != EmploymentPeriodType.InvalidPeriod)
                             {
@@ -3039,33 +3044,46 @@ namespace VigoBAS.FINT.HR
             return (aggrGroupUri , hrGroup);
         }
 
-        private static EmploymentPeriodType CheckValidPeriod(string personalressursUri, string arbeidsforholdUri, IStateValue periodeValue, int daysBefore, int daysAhead, DateTime employmentCompareDate)
+        private static EmploymentPeriodType CheckValidPeriod(string personalressursUri, string arbeidsforholdUri, IStateValue gyldighetsperiodeValue, IStateValue arbeidsforholdperiodeValue, int daysBefore, int daysAhead, DateTime employmentCompareDate)
         {
+            if (arbeidsforholdperiodeValue.Value != null)
+            {
+                var employmentPeriod = JsonConvert.DeserializeObject<Periode>(arbeidsforholdperiodeValue.Value);
+                var employmentPeriodStart = employmentPeriod.Start;
+                var calculatedEmploymentPeriodStart = employmentPeriodStart.AddDays(-daysBefore);
+                var calculatedEmploymentPeriodSlutt = (employmentPeriod?.Slutt != null) ? employmentPeriod.Slutt?.AddDays(daysAhead) : DateTime.Parse(infinityDate);
+
+                if (employmentCompareDate < calculatedEmploymentPeriodStart || employmentCompareDate > calculatedEmploymentPeriodSlutt)
+                {
+                    Logger.Log.Info($"{personalressursUri}: Invalid employment {arbeidsforholdUri}. Employment compare date {employmentCompareDate.ToString(dateFormat)} is outside calculated employment period {calculatedEmploymentPeriodStart.ToString(dateFormat)} - {calculatedEmploymentPeriodSlutt?.ToString(dateFormat)}");
+                    return EmploymentPeriodType.InvalidPeriod;
+                }
+            }
+
             var periodType = EmploymentPeriodType.InvalidPeriod;
 
-            var period = JsonConvert.DeserializeObject<Periode>(periodeValue.Value);
+            var validPeriod = JsonConvert.DeserializeObject<Periode>(gyldighetsperiodeValue.Value);
+            var validPeriodStart = validPeriod.Start;
+            var calculatedValidPeriodStart = validPeriodStart.AddDays(-daysBefore);
+            var validPeriodSlutt = (validPeriod?.Slutt != null) ? validPeriod.Slutt : DateTime.Parse(infinityDate);
+            var calulatedValidPeriodSlutt = (validPeriod?.Slutt != null) ? validPeriod.Slutt?.AddDays(daysAhead) : DateTime.Parse(infinityDate);
 
-            var periodStart = period.Start;
-            var calculatedPeriodStart = periodStart.AddDays(-daysBefore);
-            var periodSlutt = (period?.Slutt != null) ? period.Slutt : DateTime.Parse(infinityDate);
-            var calulatedPeriodSlutt = (period?.Slutt != null) ? period.Slutt?.AddDays(daysAhead) : DateTime.Parse(infinityDate);
-
-            if (calculatedPeriodStart <= employmentCompareDate && calulatedPeriodSlutt >= employmentCompareDate)
+            if (calculatedValidPeriodStart <= employmentCompareDate && calulatedValidPeriodSlutt >= employmentCompareDate )
             {
-                if (periodStart <= employmentCompareDate && periodSlutt >= employmentCompareDate)
+                if (validPeriodStart <= employmentCompareDate && validPeriodSlutt >= employmentCompareDate)
                 {
                     periodType = EmploymentPeriodType.ValidPresentPeriod;
-                    Logger.Log.Info($"{personalressursUri}: Valid present employment {arbeidsforholdUri}. PeriodStart {periodStart} is before and PeriodSlutt {periodSlutt} is after employment compare date {employmentCompareDate}");
+                    Logger.Log.Info($"{personalressursUri}: Valid present employment {arbeidsforholdUri}. PeriodStart {validPeriodStart.ToString(dateFormat)} is before and PeriodSlutt {validPeriodSlutt?.ToString(dateFormat)} is after employment compare date {employmentCompareDate.ToString(dateFormat)}");
                 }
-                else if (periodStart > employmentCompareDate)
+                else if (validPeriodStart > employmentCompareDate)
                 {
                     periodType = EmploymentPeriodType.ValidFuturePeriod;
-                    Logger.Log.Info($"{personalressursUri}: Valid future employment {arbeidsforholdUri}. PeriodStart {periodStart} is after employment compare date {employmentCompareDate} but calculated start date {calculatedPeriodStart} is before compare date");
+                    Logger.Log.Info($"{personalressursUri}: Valid future employment {arbeidsforholdUri}. PeriodStart {validPeriodStart.ToString(dateFormat)} is after employment compare date {employmentCompareDate.ToString(dateFormat)} but calculated start date {calculatedValidPeriodStart.ToString(dateFormat)} is before compare date");
                 }
                 else
                 {
                     periodType = EmploymentPeriodType.ValidPastPeriod;
-                    Logger.Log.Info($"{personalressursUri}: Valid past employment {arbeidsforholdUri}. PeriodSlutt {periodSlutt} is before employment compare date {employmentCompareDate} but after calculated end date {calulatedPeriodSlutt} is after compare date");
+                    Logger.Log.Info($"{personalressursUri}: Valid past employment {arbeidsforholdUri}. PeriodSlutt {validPeriodSlutt?.ToString(dateFormat)} is before employment compare date {employmentCompareDate.ToString(dateFormat)} but after calculated end date {calulatedValidPeriodSlutt?.ToString(dateFormat)} is after compare date");
                 }
             }
             return periodType;
