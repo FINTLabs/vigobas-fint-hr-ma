@@ -1037,15 +1037,23 @@ namespace VigoBAS.FINT.HR
                 {
                     int depth = aggrGroupOrgUnitUrisAndSearchDepth[orgElementUri];
 
-                    List<string> aggrGroupOrgUnitUris = GetSubOrgUnitUris(orgElementUri, depth, importedObjectsDict);
-
-                    foreach (var uri in aggrGroupOrgUnitUris)
+                    if (depth == 0)
                     {
-                        if (!allAggrGroupOrgUnitUris.Contains(uri))
+                        Logger.Log.Debug($"Org unit {orgElementUri} has search depth 0 in config. No sub org units of this unit will have assosiated aggregated groups");
+                        allAggrGroupOrgUnitUris.Add(orgElementUri);
+                    }
+                    else
+                    {
+                        List<string> aggrGroupOrgUnitUris = GetSubOrgUnitUris(orgElementUri, depth, importedObjectsDict);
+
+                        foreach (var uri in aggrGroupOrgUnitUris)
                         {
-                            allAggrGroupOrgUnitUris.Add(uri);
+                            if (!allAggrGroupOrgUnitUris.Contains(uri))
+                            {
+                                allAggrGroupOrgUnitUris.Add(uri);
+                            }
                         }
-                    }                    
+                    }                  
                 }
                 foreach (var aggrGroupOrgUnitUri in allAggrGroupOrgUnitUris)
                 {
