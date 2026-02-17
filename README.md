@@ -13,7 +13,7 @@ Released on 2026-02-17
 * Updated to information model 4.0.0 (BREAKING CHANGE)
 
 ### Bugfixes
-* Ixed aggregated org unit config error
+* Fixed aggregated org unit groups config error
 
 ## Version 1.9.0
 Released on 2025-12-18
