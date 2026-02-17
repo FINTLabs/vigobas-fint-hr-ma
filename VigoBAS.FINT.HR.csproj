@@ -70,14 +70,14 @@
     <Reference Include="FINT.Model.Felles, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\FINT.Model.Felles.4.0.0\lib\netstandard2.0\FINT.Model.Felles.dll</HintPath>
     </Reference>
-    <Reference Include="FINT.Model.Resource, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\FINT.Model.Resource.2.0.0\lib\netstandard2.0\FINT.Model.Resource.dll</HintPath>
+    <Reference Include="FINT.Model.Resource, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\FINT.Model.Resource.1.2.0\lib\netstandard1.4\FINT.Model.Resource.dll</HintPath>
     </Reference>
-    <Reference Include="FINT.Model.Resource.Administrasjon, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\FINT.Model.Resource.Administrasjon.4.0.0\lib\netstandard2.0\FINT.Model.Resource.Administrasjon.dll</HintPath>
+    <Reference Include="FINT.Model.Resource.Administrasjon, Version=3.21.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\FINT.Model.Resource.Administrasjon.3.21.10\lib\netstandard1.4\FINT.Model.Resource.Administrasjon.dll</HintPath>
     </Reference>
-    <Reference Include="FINT.Model.Resource.Felles, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\FINT.Model.Resource.Felles.4.0.0\lib\netstandard2.0\FINT.Model.Resource.Felles.dll</HintPath>
+    <Reference Include="FINT.Model.Resource.Felles, Version=3.21.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\FINT.Model.Resource.Felles.3.21.10\lib\netstandard1.4\FINT.Model.Resource.Felles.dll</HintPath>
     </Reference>
     <Reference Include="HalClient.Net, Version=4.1.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\HalClient.Net.4.1.3\lib\netstandard2.0\HalClient.Net.dll</HintPath>
@@ -125,7 +125,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PhoneNumbers, Version=8.13.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\libphonenumber-csharp.8.13.1\lib\netstandard2.0\PhoneNumbers.dll</HintPath>
@@ -279,8 +279,8 @@
     <Reference Include="Tavis.UriTemplates, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5be2d48fa8a60581, processorArchitecture=MSIL">
       <HintPath>packages\Tavis.UriTemplates.2.0.0\lib\netstandard2.0\Tavis.UriTemplates.dll</HintPath>
     </Reference>
-    <Reference Include="Vigo.Bas, Version=2019.2.5.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Vigo.Bas.2019.2.5.1\lib\net45\Vigo.Bas.dll</HintPath>
+    <Reference Include="Vigo.Bas, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Vigo.Bas.1.0.3\lib\net472\Vigo.Bas.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -330,6 +330,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="lib\Microsoft.MetadirectoryServicesEx.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
