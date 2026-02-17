@@ -64,11 +64,11 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FINT.Model.Administrasjon, Version=3.21.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\FINT.Model.Administrasjon.3.21.10\lib\netstandard1.4\FINT.Model.Administrasjon.dll</HintPath>
+    <Reference Include="FINT.Model.Administrasjon, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\FINT.Model.Administrasjon.4.0.0\lib\netstandard2.0\FINT.Model.Administrasjon.dll</HintPath>
     </Reference>
-    <Reference Include="FINT.Model.Felles, Version=3.21.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\FINT.Model.Felles.3.21.10\lib\netstandard1.4\FINT.Model.Felles.dll</HintPath>
+    <Reference Include="FINT.Model.Felles, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\FINT.Model.Felles.4.0.0\lib\netstandard2.0\FINT.Model.Felles.dll</HintPath>
     </Reference>
     <Reference Include="FINT.Model.Resource, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\FINT.Model.Resource.1.2.0\lib\netstandard1.4\FINT.Model.Resource.dll</HintPath>
