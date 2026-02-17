@@ -9,9 +9,12 @@ Version 1.7.0 is the first public versjon. For older versions see: https://vigob
 ## Version 2.0.0
 Released on 2026-02-17
 
-### Features
-* Updated to information model 4.0.0 (BREAKING CHANGE)
+### BREAKING CHANGE! 
+This version is to be used in be used in beta enviroments only until all data in the FINT api environment are updated to information model 4.
 
+### Features
+* Updated to information model 4.0.0
+  
 ### Bugfixes
 * Fixed aggregated org unit groups config error
 
